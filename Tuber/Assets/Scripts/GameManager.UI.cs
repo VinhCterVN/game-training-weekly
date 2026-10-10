@@ -30,7 +30,7 @@ namespace DefaultNamespace
         private void BindTopBarButtons()
         {
             var topBar = FindObjectsOfType<Transform>(true)
-                .FirstOrDefault(transform => NormalizeName(transform.name) == "topbar");
+                .FirstOrDefault(t => NormalizeName(t.name) == "topbar");
             if (topBar == null)
             {
                 Debug.LogWarning("Could not find a GameObject named TopBar in the active scene.", this);
@@ -41,11 +41,10 @@ namespace DefaultNamespace
             BindTopBarButton(topBar, "playagain", PlayAgain);
         }
 
-        private void BindTopBarButton(Transform topBar, string nameToken,
-            UnityEngine.Events.UnityAction action)
+        private void BindTopBarButton(Transform topBar, string nameToken, UnityEngine.Events.UnityAction action)
         {
             var target = topBar.GetComponentsInChildren<Transform>(true)
-                .FirstOrDefault(transform => NormalizeName(transform.name).Contains(nameToken));
+                .FirstOrDefault(t => NormalizeName(t.name).Contains(nameToken));
             if (target == null)
             {
                 Debug.LogWarning($"Could not find a TopBar control named for '{nameToken}'.", topBar);
@@ -82,15 +81,15 @@ namespace DefaultNamespace
 
                 clickHandler.Initialize(this, nameToken == "undo");
 
-                var collider = spriteRenderer.GetComponent<Collider2D>();
-                if (collider == null)
+                var coll2D = spriteRenderer.GetComponent<Collider2D>();
+                if (coll2D == null)
                 {
                     var boxCollider = spriteRenderer.gameObject.AddComponent<BoxCollider2D>();
                     boxCollider.size = spriteRenderer.sprite != null
                         ? spriteRenderer.sprite.bounds.size
                         : Vector2.one;
                     boxCollider.offset = spriteRenderer.sprite != null
-                        ? (Vector2)spriteRenderer.sprite.bounds.center
+                        ? spriteRenderer.sprite.bounds.center
                         : Vector2.zero;
                 }
             }

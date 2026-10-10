@@ -19,7 +19,7 @@ namespace DefaultNamespace
 
         [SerializeField] private Sprite blueBottomSprite;
         [SerializeField] private Sprite greenBottomSprite;
-        
+
         [SerializeField] private int tubeIndex;
         [SerializeField] private float selectedOffset = 0.25f;
         [SerializeField] private float selectedScale = 1.05f;
@@ -37,6 +37,7 @@ namespace DefaultNamespace
 
         private int Count => _balls.Count;
         public bool IsEmpty => _balls.Count == 0;
+
         public bool IsComplete
         {
             get
@@ -61,7 +62,7 @@ namespace DefaultNamespace
             _originalRotation = transform.rotation;
             _colorsStack = new Stack<TubeColor>();
             if (audioSource == null) audioSource = GetComponent<AudioSource>();
-            
+
             tubeIndex = transform.GetSiblingIndex();
             switch (tubeIndex)
             {
@@ -99,7 +100,7 @@ namespace DefaultNamespace
             sequence.Join(transform.DOMoveY(_originalPosition.y, moveDuration).SetEase(Ease.OutQuad));
             sequence.Join(transform.DOScale(_originalScale, moveDuration).SetEase(Ease.OutQuad));
         }
-        
+
         private int GetTopSameColorCount()
         {
             if (IsEmpty) return 0;
@@ -123,12 +124,13 @@ namespace DefaultNamespace
             return Mathf.Min(GetTopSameColorCount(), freeSpace);
         }
 
-        public void HandleTubeShake()
+        public void HandleTubeShake(Action onComplete = null)
         {
             transform.DOKill();
             Sequence sequence = DOTween.Sequence();
-            sequence.Append(transform.DOShakePosition(0.5f, 0.2f))
-                .AppendCallback(() => transform.position = _originalPosition);
+            sequence.Append(transform.DOShakeRotation(0.45f, new Vector3(5f, 5f, 5f), 20))
+                .AppendCallback(() => transform.position = _originalPosition)
+                .OnComplete(() => onComplete?.Invoke());
         }
 
         private void SpawnBalls()
@@ -164,7 +166,7 @@ namespace DefaultNamespace
         }
 
         public bool CanPourInto(Tube tube) =>
-            tube != null && tube != this && !IsEmpty && !tube.IsFull;
+            tube != null && tube != this && !IsEmpty && !tube.IsFull && (tube.IsEmpty || tube.TopColor == TopColor);
 
         private void OnMouseDown() => FindObjectOfType<GameManager>().OnTubeClicked(this);
     }

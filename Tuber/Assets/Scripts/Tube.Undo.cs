@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using DG.Tweening;
 
 namespace DefaultNamespace
@@ -12,7 +13,7 @@ namespace DefaultNamespace
                 if (target._balls.Count == 0 || _balls.Count >= ballSlots.Length)
                     throw new InvalidOperationException("Cannot undo the recorded pour with the current tube contents.");
 
-                var ballToRestore = target._balls[target._balls.Count - 1];
+                var ballToRestore = target._balls.Last();
                 target._balls.RemoveAt(target._balls.Count - 1);
 
                 var sourceSlotIndex = _balls.Count;

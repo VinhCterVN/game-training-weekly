@@ -5,6 +5,10 @@ using UnityEngine;
 
 namespace DefaultNamespace
 {
+    
+    /// <summary>
+    /// This partial class handles the pouring functionality of the Tube class, allowing balls to be transferred from one tube to another with animations and sound effects.
+    /// </summary>
     public partial class Tube
     {
         [SerializeField] private AudioSource audioSource;
@@ -14,6 +18,18 @@ namespace DefaultNamespace
         [SerializeField] private float ballMoveDuration = 0.15f;
         [SerializeField] private int pouringSortingOrderOffset = 100;
 
+        /// <summary>
+        /// Pours a specified amount of balls from this tube to the target tube, creating an animated sequence for the pouring action.
+        /// </summary>
+        /// <param name="target">
+        /// The target tube to pour balls into.
+        /// </param>
+        /// <param name="amount">
+        /// The number of balls to pour.
+        /// </param>
+        /// <returns>
+        /// A DOTween sequence representing the pouring animation.
+        /// </returns>
         public Sequence PourTo(Tube target, int amount)
         {
             _isSelected = false;
@@ -46,6 +62,7 @@ namespace DefaultNamespace
             var distance = _originalPosition.x - targetPosition.x;
             distance += distance > 0 ? -exitOffset : exitOffset;
 
+            // Pouring animation sequence
             sequence
                 .Append(transform.DOMoveY(_originalPosition.y + pourUpOffset, 0.15f))
                 .Join(transform.DOScale(_originalScale, 0.15f))

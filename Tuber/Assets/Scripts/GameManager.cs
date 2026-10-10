@@ -76,8 +76,7 @@ namespace DefaultNamespace
             {
                 if (audioSource != null && errorSound != null)
                     audioSource.PlayOneShot(errorSound);
-                sourceTube.HandleTubeShake();
-                sourceTube.Deselect();
+                sourceTube.HandleTubeShake(onComplete: sourceTube.Deselect);
                 _selectedTube = null;
             }
         }
