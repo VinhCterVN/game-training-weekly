@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 466d5088d9364fd42b6afb73eb5c5e81, type: 3}
+  m_Name: Level_02
+  m_EditorClassIdentifier: 
+  levelIndex: 2
+  displayName: Try another one
+  colorCount: 4
+  emptyBottles: 1
+  seed: 1184
+  bottles:
+  - colors: 01000000000000000300000001000000
+    position: {x: -145, y: 165}
+  - colors: 03000000000000000000000001000000
+    position: {x: 0, y: 165}
+  - colors: 02000000000000000300000001000000
+    position: {x: 145, y: 165}
+  - colors: 02000000020000000200000003000000
+    position: {x: -72.5, y: -165}
+  - colors: 
+    position: {x: 72.5, y: -165}

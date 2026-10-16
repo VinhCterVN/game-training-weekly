@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 466d5088d9364fd42b6afb73eb5c5e81, type: 3}
+  m_Name: Level_04
+  m_EditorClassIdentifier: 
+  levelIndex: 4
+  displayName: Don't be dizzy
+  colorCount: 6
+  emptyBottles: 2
+  seed: 160
+  bottles:
+  - colors: 04000000040000000200000003000000
+    position: {x: -217.5, y: 165}
+  - colors: 00000000010000000000000003000000
+    position: {x: -72.5, y: 165}
+  - colors: 02000000030000000200000001000000
+    position: {x: 72.5, y: 165}
+  - colors: 05000000000000000100000005000000
+    position: {x: 217.5, y: 165}
+  - colors: 05000000010000000000000003000000
+    position: {x: -217.5, y: -165}
+  - colors: 04000000020000000400000005000000
+    position: {x: -72.5, y: -165}
+  - colors: 
+    position: {x: 72.5, y: -165}
+  - colors: 
+    position: {x: 217.5, y: -165}
