@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,16 +27,23 @@ namespace TuberLevels
             _particles = particles;
         }
 
-        public void Initialize(LevelManager levels, UIManager ui, AudioManager audio)
+        public void Initialize(LevelManager levels, UIManager ui, AudioManager au)
         {
             _levels = levels;
             _ui = ui;
-            _audio = audio;
+            _audio = au;
         }
 
         public void Select(BottleController bottle)
         {
             if (_isBusy || _hasWon || _ui.IsOverlayOpen) return;
+            if (WaterSortRules.IsComplete(bottle.Colors))
+            {
+                _audio.Play(Sound.Error);
+                _ui.SetMessage("This tube is complete.");
+                return;
+            }
+
             _audio.Play(Sound.Click);
             if (_selected == bottle)
             {
@@ -114,7 +122,9 @@ namespace TuberLevels
         {
             foreach (var a in _levels.Bottles)
             foreach (var b in _levels.Bottles)
-                if (a != b && WaterSortRules.PourCount(a.Colors, b.Colors) > 0)
+                if (a != b &&
+                    !WaterSortRules.IsComplete(a.Colors) &&
+                    WaterSortRules.PourCount(a.Colors, b.Colors) > 0)
                     return true;
             return false;
         }
@@ -124,7 +134,7 @@ namespace TuberLevels
             if (_isBusy || _hasWon || _history.Count == 0) return;
             if (_selected != null) _selected.SetSelected(false);
             _selected = null;
-            var move = _history[_history.Count - 1];
+            var move = _history.Last();
             _history.RemoveAt(_history.Count - 1);
             var source = _levels.Bottles[move.from];
             var target = _levels.Bottles[move.to];

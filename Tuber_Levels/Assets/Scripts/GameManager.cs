@@ -26,8 +26,6 @@ namespace TuberLevels
             _sort.Initialize(_levels, _ui, _audio);
             _ui.Initialize(_levels, _sort, _audio);
             _levels.Initialize(_sort, _ui);
-            if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-lab-smoke") >= 0)
-                gameObject.AddComponent<GameSmokeTest>().Initialize(_levels, _sort, _ui);
         }
     }
 }

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace TuberLevels
 {
-    [CreateAssetMenu(menuName = "Tube Levels/Level Database")]
+    [CreateAssetMenu(menuName = "Tube Levels Database")]
     public sealed class LevelDatabaseSO : ScriptableObject
     {
         public List<LevelDataSO> levels = new List<LevelDataSO>();

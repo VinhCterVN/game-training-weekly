@@ -97,15 +97,8 @@ namespace TuberLevels.Editor
             var frame = Rect("Portrait Layout", safe, Vector2.zero, new Vector2(720, 1280));
             // Scale the complete layout inside the safe area without cropping on tablets or landscape windows.
             frame.gameObject.AddComponent<PortraitLayout>();
-            Label("Eyebrow", frame, "T U B E   L E V E L S", new Vector2(0, 558), new Vector2(500, 32), 21, _teal,
-                FontStyle.Bold);
             var levelText = Label("Level title", frame, "LEVEL 01", new Vector2(0, 494), new Vector2(500, 70), 57, _ink,
                 FontStyle.Bold);
-            var subtitle = Label("Level subtitle", frame, "First drops", new Vector2(0, 439), new Vector2(500, 38), 25,
-                _muted);
-            var dots = new Image[5];
-            for (int i = 0; i < 5; i++)
-                dots[i] = Panel("Progress " + i, frame, new Vector2((i - 2) * 26, 390), new Vector2(12, 12), _teal);
             var movesCard = Panel("Move counter", frame, new Vector2(0, 329), new Vector2(186, 48),
                 new Color(1, 1, 1, .65f));
             var moves = Label("Moves", movesCard.transform, "00  MOVES", Vector2.zero, new Vector2(170, 40), 20, _muted,
@@ -156,9 +149,9 @@ namespace TuberLevels.Editor
             var sort = systems.AddComponent<WaterSortController>();
             sort.Configure(stream, effects);
             var ui = systems.AddComponent<UIManager>();
-            ui.Configure(levelText, subtitle, moves, message, undo, restart, home, sound,
+            ui.Configure(levelText, moves, message, undo, restart, home, sound,
                 sound.GetComponentInChildren<Text>(), win,
-                levelPanel, close, levelButtons, labels, states, dots);
+                levelPanel, close, levelButtons, labels, states);
             systems.AddComponent<GameManager>().Configure(levels, sort, ui, audio);
             new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
             win.gameObject.SetActive(false);

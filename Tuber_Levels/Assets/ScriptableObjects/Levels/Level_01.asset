@@ -16,13 +16,13 @@ MonoBehaviour:
   displayName: First drops
   colorCount: 3
   emptyBottles: 1
-  seed: 593
+  seed: 631
   bottles:
-  - colors: 01000000010000000000000001000000
+  - colors: 00000000010000000200000002000000
     position: {x: -217.5, y: 0}
-  - colors: 02000000020000000200000000000000
+  - colors: 01000000000000000100000000000000
     position: {x: -72.5, y: 0}
-  - colors: 00000000020000000000000001000000
+  - colors: 00000000020000000200000001000000
     position: {x: 72.5, y: 0}
   - colors: 
     position: {x: 217.5, y: 0}

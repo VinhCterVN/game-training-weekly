@@ -6,7 +6,6 @@ namespace TuberLevels
     public sealed class UIManager : MonoBehaviour
     {
         [SerializeField] private Text _level;
-        [SerializeField] private Text _subtitle;
         [SerializeField] private Text _moves;
         [SerializeField] private Text _message;
         [SerializeField] private Button _undo;
@@ -20,19 +19,17 @@ namespace TuberLevels
         [SerializeField] private Button[] _levelButtons;
         [SerializeField] private Text[] _levelLabels;
         [SerializeField] private Text[] _levelStates;
-        [SerializeField] private Image[] _progressDots;
         private LevelManager _levels;
         private WaterSortController _sort;
         private AudioManager _audio;
         public bool IsOverlayOpen => _win.gameObject.activeSelf || _levelPanel.activeSelf;
         public WinPopupUI Win => _win;
 
-        public void Configure(Text level, Text subtitle, Text moves, Text message, Button undo, Button restart,
+        public void Configure(Text level, Text moves, Text message, Button undo, Button restart,
             Button home, Button sound, Text soundLabel, WinPopupUI win, GameObject levelPanel, Button close,
-            Button[] levelButtons, Text[] labels, Text[] states, Image[] dots)
+            Button[] levelButtons, Text[] labels, Text[] states)
         {
             _level = level;
-            _subtitle = subtitle;
             _moves = moves;
             _message = message;
             _undo = undo;
@@ -46,7 +43,6 @@ namespace TuberLevels
             _levelButtons = levelButtons;
             _levelLabels = labels;
             _levelStates = states;
-            _progressDots = dots;
         }
 
         public void Initialize(LevelManager levels, WaterSortController sort, AudioManager audio)
@@ -111,13 +107,10 @@ namespace TuberLevels
         public void ShowLevel(int number, int total, string title)
         {
             _level.text = "LEVEL " + number.ToString("00");
-            _subtitle.text = title;
             UpdateMoves(0, false);
             SetBusy(false);
             _undo.interactable = false;
             _message.text = "Tap a tube, then tap where you want to pour.";
-            for (int i = 0; i < _progressDots.Length; i++)
-                _progressDots[i].color = i < number ? new Color(.1f, .55f, .52f) : new Color(.1f, .55f, .52f, .18f);
         }
 
         public void UpdateMoves(int moves, bool canUndo)
