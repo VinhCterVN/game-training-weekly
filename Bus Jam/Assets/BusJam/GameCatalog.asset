@@ -1,0 +1,131 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de36358f6982fb04693f936af24926a3, type: 3}
+  m_Name: GameCatalog
+  m_EditorClassIdentifier: 
+  levels:
+  - {fileID: 11400000, guid: 7c33bcf98feb868479293198463f249c, type: 2}
+  - {fileID: 11400000, guid: 999fba8e0e5d3144297025298cb69556, type: 2}
+  - {fileID: 11400000, guid: 431045c4f75d90f4f85e267f6d8eb61e, type: 2}
+  - {fileID: 11400000, guid: bd674206265d0174494ca82fec260b56, type: 2}
+  - {fileID: 11400000, guid: 6b8e9d27444b5864583fd5a181ea8bfd, type: 2}
+  vehicles:
+  - kind: 0
+    color: 0
+    closed:
+    - {fileID: 21300000, guid: c74a5745cc64d404898c4ef315215529, type: 3}
+    - {fileID: 21300000, guid: 7ae31ede0098b634fa94ca6edb799586, type: 3}
+    - {fileID: 21300000, guid: 479702c4283414547909e6a089ef7e83, type: 3}
+    - {fileID: 21300000, guid: 11a31269d3dfd7540a60f597fe5df629, type: 3}
+    seats:
+    - {fileID: 21300000, guid: 4f7986105a8780b4fbc67cb31d3ef1c0, type: 3}
+    - {fileID: 21300000, guid: a31ca9db222eca94fb9f446ec8f80fc7, type: 3}
+    - {fileID: 21300000, guid: ed03b2c9580881642a308de26618a5c3, type: 3}
+    - {fileID: 21300000, guid: 819e00ffdd23df440b0879acd7c2d745, type: 3}
+  - kind: 0
+    color: 1
+    closed:
+    - {fileID: 21300000, guid: 88ed5a318c8d886468f85626c6387bd7, type: 3}
+    - {fileID: 21300000, guid: a2b973b8270610941be40c0bdbbdc361, type: 3}
+    - {fileID: 21300000, guid: 8904d662800746443b285d797c455491, type: 3}
+    - {fileID: 21300000, guid: bc95eb255d816404e977635cfb8940ee, type: 3}
+    seats:
+    - {fileID: 21300000, guid: eb9c63aebca91994d97e45186aac89e0, type: 3}
+    - {fileID: 21300000, guid: 4a7649a0fb9f6b54aad00de7264887a2, type: 3}
+    - {fileID: 21300000, guid: 2743077bf5805974eada9a73186d32fa, type: 3}
+    - {fileID: 21300000, guid: 5ddea77a615b56f449717be0acb6ba31, type: 3}
+  - kind: 0
+    color: 2
+    closed:
+    - {fileID: 21300000, guid: 21f1819a07e439b41a897b8b03bfc297, type: 3}
+    - {fileID: 21300000, guid: d46719064ce5fe847a3751870de52319, type: 3}
+    - {fileID: 21300000, guid: 79e9e5e3f42ea8f40b4b15a9e7a2cb5b, type: 3}
+    - {fileID: 21300000, guid: 4554e35318f20794ea698188fd700e86, type: 3}
+    seats:
+    - {fileID: 21300000, guid: 5fff49ab4b1aab846a2690f4c6b3e1a5, type: 3}
+    - {fileID: 21300000, guid: d438f14df1309e04d80fb746dc6beef2, type: 3}
+    - {fileID: 21300000, guid: 7ff81bb2f43020043b00393f9efddf84, type: 3}
+    - {fileID: 21300000, guid: 00fcdf6ea2d63c041826e1115c8502cb, type: 3}
+  - kind: 0
+    color: 3
+    closed:
+    - {fileID: 21300000, guid: c74a5745cc64d404898c4ef315215529, type: 3}
+    - {fileID: 21300000, guid: 7ae31ede0098b634fa94ca6edb799586, type: 3}
+    - {fileID: 21300000, guid: 479702c4283414547909e6a089ef7e83, type: 3}
+    - {fileID: 21300000, guid: 11a31269d3dfd7540a60f597fe5df629, type: 3}
+    seats:
+    - {fileID: 21300000, guid: 4f7986105a8780b4fbc67cb31d3ef1c0, type: 3}
+    - {fileID: 21300000, guid: a31ca9db222eca94fb9f446ec8f80fc7, type: 3}
+    - {fileID: 21300000, guid: ed03b2c9580881642a308de26618a5c3, type: 3}
+    - {fileID: 21300000, guid: 819e00ffdd23df440b0879acd7c2d745, type: 3}
+  - kind: 1
+    color: 0
+    closed:
+    - {fileID: 21300000, guid: cc01d4b39dd94a44c97f48e7ff037ad3, type: 3}
+    - {fileID: 21300000, guid: 64254c62a0cfffc4d938a27cb0ed5989, type: 3}
+    - {fileID: 21300000, guid: dc26c3c15d8200d4b9663513de01aa52, type: 3}
+    - {fileID: 21300000, guid: ec24f5d9ca2e81d48a76d42360daad81, type: 3}
+    seats:
+    - {fileID: 21300000, guid: fc0be2c51f0e6a94c9e2f9e1e49e2a0f, type: 3}
+    - {fileID: 21300000, guid: b1dc4d9791898b74a93d667f5afd4051, type: 3}
+    - {fileID: 21300000, guid: 108147909755434428911852e5d0f720, type: 3}
+    - {fileID: 21300000, guid: 2481be0edaffdc4438fc78912a1023d0, type: 3}
+  - kind: 1
+    color: 1
+    closed:
+    - {fileID: 21300000, guid: 43f8a8f2daf8d5d44ab21d64e6471d3e, type: 3}
+    - {fileID: 21300000, guid: 770f9045cd46a2344ada130cecf8c34b, type: 3}
+    - {fileID: 21300000, guid: 9a1948ffaf46179479374638e7961cef, type: 3}
+    - {fileID: 21300000, guid: 2f673f3d8bf5cdf4e8250e8937e0daf4, type: 3}
+    seats:
+    - {fileID: 21300000, guid: ac7043547f800db4e8197527659dd313, type: 3}
+    - {fileID: 21300000, guid: ab14e8a9f751e9443a2918a38241049f, type: 3}
+    - {fileID: 21300000, guid: ecad2cb3dfea5274c8eccdc163a765ab, type: 3}
+    - {fileID: 21300000, guid: 6ddef3f73a815ee4988ce755b162292c, type: 3}
+  - kind: 1
+    color: 2
+    closed:
+    - {fileID: 21300000, guid: 5b335c0df913dc14eab72eed2ce326bc, type: 3}
+    - {fileID: 21300000, guid: c9feb24131c1f9d4284231a0b91f0dca, type: 3}
+    - {fileID: 21300000, guid: d3718f1b11ead5f4996f169ea9072223, type: 3}
+    - {fileID: 21300000, guid: a3b2ddfbcbba77346b5a90289e99cca1, type: 3}
+    seats:
+    - {fileID: 21300000, guid: 218ddb6fec802904f912587ada8bb7c9, type: 3}
+    - {fileID: 21300000, guid: eee952473df03e04eb99c3d3a83abcc6, type: 3}
+    - {fileID: 21300000, guid: 640f1d212ac60354d87d531e2dd16234, type: 3}
+    - {fileID: 21300000, guid: 0d844a59bdcd7be45ab1d1d59c125852, type: 3}
+  - kind: 1
+    color: 3
+    closed:
+    - {fileID: 21300000, guid: cc01d4b39dd94a44c97f48e7ff037ad3, type: 3}
+    - {fileID: 21300000, guid: 64254c62a0cfffc4d938a27cb0ed5989, type: 3}
+    - {fileID: 21300000, guid: dc26c3c15d8200d4b9663513de01aa52, type: 3}
+    - {fileID: 21300000, guid: ec24f5d9ca2e81d48a76d42360daad81, type: 3}
+    seats:
+    - {fileID: 21300000, guid: fc0be2c51f0e6a94c9e2f9e1e49e2a0f, type: 3}
+    - {fileID: 21300000, guid: b1dc4d9791898b74a93d667f5afd4051, type: 3}
+    - {fileID: 21300000, guid: 108147909755434428911852e5d0f720, type: 3}
+    - {fileID: 21300000, guid: 2481be0edaffdc4438fc78912a1023d0, type: 3}
+  background: {fileID: 21300000, guid: a4a35e50859133c4ca2e6772fdcdd889, type: 3}
+  passenger: {fileID: 21300000, guid: 4322b034569a9f54dad09c2859208697, type: 3}
+  slot: {fileID: 21300000, guid: a04848825c3913d47b4a1a37298b772f, type: 3}
+  exhaust: {fileID: -2413806693520163455, guid: 8c1a1a15200e88445bb938585922e790, type: 3}
+  star: {fileID: 21300000, guid: a9fe5545b74798a4597ec5629e69f7c3, type: 3}
+  winRays: {fileID: 1955430906, guid: f3f41800b44ed0947865bb26a1767f83, type: 3}
+  button: {fileID: 21300000, guid: 19ce143569295ce4a836f51a0d6ff6f8, type: 3}
+  primaryButton: {fileID: 21300000, guid: d21c6c0ab24f9264dbaa4a7b2be4c22e, type: 3}
+  dialogFrame: {fileID: 21300000, guid: bf5d9f4995dc10d49939e89b6b0c4cf0, type: 3}
+  font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+  greenVehicleMaterial: {fileID: 2100000, guid: 0d779da4a1f821941b82e682a21d7bfa, type: 2}
+  busPrefab: {fileID: 5293516988660083341, guid: 9ce857691f7646748b7202a85d103262, type: 3}
+  passengerPrefab: {fileID: 3049062509254964760, guid: 96cd637d3f3ea7647bdbe4303b8ec09c, type: 3}
+  particlePrefab: {fileID: 7374767769592998667, guid: 35a93279317ae1c4d9bcd67bb6cb49b6, type: 3}

@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fbca585cff343746836dae178bd8de8, type: 3}
+  m_Name: Level01
+  m_EditorClassIdentifier: 
+  title: First departures
+  hint: The blue bus can leave first. Follow its arrow to clear a path.
+  columns: 5
+  rows: 5
+  bayCount: 2
+  vehicles:
+  - kind: 0
+    color: 0
+    facing: 0
+    x: 0
+    y: 0
+  - kind: 1
+    color: 1
+    facing: 1
+    x: 0
+    y: 3
+  - kind: 0
+    color: 2
+    facing: 3
+    x: 3
+    y: 0
+  - kind: 1
+    color: 0
+    facing: 0
+    x: 4
+    y: 1
+  passengers: 0000000000000000000000000000000000000000000000000100000001000000010000000100000001000000010000000000000000000000000000000000000002000000020000000200000002000000
