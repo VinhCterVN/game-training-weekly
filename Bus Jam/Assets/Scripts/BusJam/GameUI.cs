@@ -10,7 +10,7 @@ namespace BusJam
         private Font font;
         private RectTransform canvasRoot, safeRoot;
         private GameObject modal;
-        private Text levelText, remainingText, progressText, hintText, modalTitle, modalBody, primaryText, soundText;
+        private Text levelText, remainingText, modalTitle, modalBody, primaryText, soundText;
         private Button primary, secondary;
         private Action primaryAction, secondaryAction;
         private Rect lastSafeArea;
@@ -18,7 +18,7 @@ namespace BusJam
         private Sprite buttonSprite;
         private readonly Color ink = new Color(.12f, .19f, .32f);
 
-        public void Initialize(GameCatalog catalog, Action pause, Action retry, Action hint, Action sound)
+        public void Initialize(GameCatalog catalog, Action pause, Action retry, Action sound)
         {
             font = catalog.font != null ? catalog.font : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             buttonSprite = catalog.button;
@@ -40,25 +40,21 @@ namespace BusJam
             Button("Pause", top, "II", new Vector2(420, 0), new Vector2(90, 80), pause);
             remainingText = Text("Remaining count", portrait, "0", new Vector2(-350, 647), new Vector2(170, 75), 52, Color.white);
             Text("Remaining label", portrait, "WAITING", new Vector2(-350, 600), new Vector2(160, 35), 23, ink);
-            progressText = Text("Progress", portrait, "", new Vector2(0, 150), new Vector2(880, 38), 25, ink);
-            hintText = Text("Instruction", portrait, "", new Vector2(0, -715), new Vector2(900, 100), 29, ink);
-            hintText.fontStyle = FontStyle.Normal;
-            Button("Retry", portrait, "RETRY", new Vector2(-320, -850), new Vector2(270, 100), retry);
-            Button("Hint", portrait, "HINT", new Vector2(0, -850), new Vector2(270, 100), hint);
-            var soundButton = Button("Sound", portrait, "SOUND ON", new Vector2(320, -850), new Vector2(270, 100), sound);
+
+            Button("Retry", portrait, "RETRY", new Vector2(-180, -850), new Vector2(300, 95), retry);
+            var soundButton = Button("Sound", portrait, "SOUND ON", new Vector2(180, -850), new Vector2(300, 95), sound);
             soundText = soundButton.GetComponentInChildren<Text>();
 
-            modal = Panel("Modal overlay", canvasRoot, Vector2.zero, Vector2.zero, new Color(.04f, .09f, .18f, .8f)).gameObject;
+            modal = Panel("Modal overlay", canvasRoot, Vector2.zero, Vector2.zero, new Color(.02f, .05f, .1f, .75f)).gameObject;
             var m = (RectTransform)modal.transform; m.anchorMin = Vector2.zero; m.anchorMax = Vector2.one; m.sizeDelta = Vector2.zero;
-            var card = Panel("Dialog", m, Vector2.zero, new Vector2(860, 840), Color.white);
-            card.GetComponent<Image>().sprite = catalog.dialogFrame;
-            modalTitle = Text("Title", card, "BUS JAM", new Vector2(0, 238), new Vector2(780, 130), 65, ink);
-            modalBody = Text("Description", card, "", new Vector2(0, 50), new Vector2(710, 210), 32, ink);
+            var cardBorder = Panel("Dialog border", m, Vector2.zero, new Vector2(606, 366), new Color(.28f, .38f, .52f, 1f));
+            var card = Panel("Dialog", cardBorder, Vector2.zero, new Vector2(600, 360), new Color(.12f, .16f, .24f, .98f));
+            modalTitle = Text("Title", card, "BUS JAM", new Vector2(0, 85), new Vector2(560, 70), 44, Color.white);
+            modalBody = Text("Description", card, "", new Vector2(0, 25), new Vector2(540, 50), 24, new Color(.82f, .87f, .94f));
             modalBody.fontStyle = FontStyle.Normal;
-            primary = Button("Primary", card, "PLAY", new Vector2(0, -153), new Vector2(650, 108), () => primaryAction?.Invoke());
+            primary = FlatButton("Primary", card, "PLAY", new Vector2(0, -25), new Vector2(440, 75), new Color(.2f, .5f, .88f), () => primaryAction?.Invoke(), 30);
             primaryText = primary.GetComponentInChildren<Text>();
-            primary.GetComponent<Image>().sprite = catalog.primaryButton;
-            secondary = Button("Secondary", card, "RETRY", new Vector2(0, -281), new Vector2(650, 85), () => secondaryAction?.Invoke());
+            secondary = FlatButton("Secondary", card, "RETRY", new Vector2(0, -105), new Vector2(440, 65), new Color(.32f, .38f, .48f), () => secondaryAction?.Invoke(), 26);
             modal.SetActive(false);
             if (EventSystem.current == null) new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
             UpdateSafeArea();
@@ -78,18 +74,58 @@ namespace BusJam
         {
             levelText.text = $"LEVEL {level + 1}";
             remainingText.text = round.Remaining.ToString();
-            int occupied = 0; foreach (int id in round.Bays) if (id >= 0) occupied++;
-            progressText.text = $"{round.Delivered}/{round.Level.vehicles.Count} DELIVERED     •     {occupied}/{round.Bays.Length} BAYS";
         }
-        public void Hint(string message) => hintText.text = message;
+        public void Hint(string message) {}
         public void SetSound(bool muted) => soundText.text = muted ? "SOUND OFF" : "SOUND ON";
         public void Hide() => modal.SetActive(false);
         public bool ModalVisible => modal.activeSelf;
         public void Show(string title, string body, string action, Action onPrimary, string second = null, Action onSecondary = null)
         {
-            modalTitle.text = title; modalBody.text = body; primaryText.text = action; primaryAction = onPrimary; secondaryAction = onSecondary;
-            secondary.gameObject.SetActive(second != null);
-            if (second != null) secondary.GetComponentInChildren<Text>().text = second;
+            modalTitle.text = title;
+            primaryText.text = action;
+            primaryAction = onPrimary;
+            secondaryAction = onSecondary;
+
+            bool hasBody = !string.IsNullOrWhiteSpace(body);
+            modalBody.gameObject.SetActive(hasBody);
+            if (hasBody) modalBody.text = body;
+
+            bool hasSecond = !string.IsNullOrWhiteSpace(second);
+            secondary.gameObject.SetActive(hasSecond);
+            if (hasSecond) secondary.GetComponentInChildren<Text>().text = second;
+
+            var titleRect = modalTitle.rectTransform;
+            var primaryRect = primary.GetComponent<RectTransform>();
+            var secondRect = secondary.GetComponent<RectTransform>();
+
+            if (!hasBody)
+            {
+                titleRect.anchoredPosition = new Vector2(0, 75);
+                if (hasSecond)
+                {
+                    primaryRect.anchoredPosition = new Vector2(0, -20);
+                    secondRect.anchoredPosition = new Vector2(0, -100);
+                }
+                else
+                {
+                    primaryRect.anchoredPosition = new Vector2(0, -50);
+                }
+            }
+            else
+            {
+                titleRect.anchoredPosition = new Vector2(0, 95);
+                modalBody.rectTransform.anchoredPosition = new Vector2(0, 35);
+                if (hasSecond)
+                {
+                    primaryRect.anchoredPosition = new Vector2(0, -30);
+                    secondRect.anchoredPosition = new Vector2(0, -105);
+                }
+                else
+                {
+                    primaryRect.anchoredPosition = new Vector2(0, -60);
+                }
+            }
+
             modal.SetActive(true);
         }
 
@@ -119,6 +155,19 @@ namespace BusJam
             var labelText = Text("Label", r, label, Vector2.zero, size - new Vector2(12, 6), 31, Color.white);
             var outline = labelText.gameObject.AddComponent<Outline>(); outline.effectColor = new Color(0, .15f, .25f, .5f); outline.effectDistance = new Vector2(1, -1);
             b.onClick.AddListener(() => action()); return b;
+        }
+        private Button FlatButton(string name, Transform parent, string label, Vector2 position, Vector2 size, Color bgColor, Action action, int fontSize = 30)
+        {
+            var r = Panel(name, parent, position, size, bgColor);
+            var b = r.gameObject.AddComponent<Button>();
+            b.targetGraphic = r.GetComponent<Image>();
+            var colors = b.colors;
+            colors.highlightedColor = bgColor * 1.15f;
+            colors.pressedColor = bgColor * 0.8f;
+            b.colors = colors;
+            Text("Label", r, label, Vector2.zero, size - new Vector2(10, 6), fontSize, Color.white);
+            b.onClick.AddListener(() => action());
+            return b;
         }
     }
 }

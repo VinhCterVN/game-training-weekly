@@ -13,6 +13,8 @@ namespace BusJam
         public int Id { get; private set; }
         public VehiclePlacement Placement { get; private set; }
         public Facing Direction { get; private set; }
+        [SerializeField] public float parkCarCell = 0.85f;
+        [SerializeField] public float parkBusCell = 0.68f;
         private GameCatalog catalog;
         private float cell;
         private Material defaultMaterial;
@@ -54,7 +56,9 @@ namespace BusJam
 
         public void Park()
         {
-            cell = .66f;
+            float carSize = parkCarCell > 0.1f ? parkCarCell : 0.85f;
+            float busSize = parkBusCell > 0.1f ? parkBusCell : 0.68f;
+            cell = Placement.kind == VehicleKind.Car ? carSize : busSize;
             SetArt(Facing.Up, true);
             count.gameObject.SetActive(true);
             SetCount(0);

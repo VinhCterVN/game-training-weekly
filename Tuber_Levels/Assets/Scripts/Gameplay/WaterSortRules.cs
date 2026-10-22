@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TuberLevels
 {
@@ -56,7 +57,7 @@ namespace TuberLevels
 
         public static void Apply(List<WaterColor> source, List<WaterColor> target, int count)
         {
-            WaterColor color = source[source.Count - 1];
+            WaterColor color = source.Last();
             source.RemoveRange(source.Count - count, count);
             for (int i = 0; i < count; i++) target.Add(color);
         }

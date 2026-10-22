@@ -41,7 +41,7 @@ namespace BusJam
             Pools = new GamePools(catalog, world, maxVehicles);
             audioFx = gameObject.AddComponent<GameAudio>(); audioFx.Initialize();
             UI = new GameObject("Game UI", typeof(RectTransform)).AddComponent<GameUI>();
-            UI.Initialize(catalog, TogglePause, ConfirmRetry, ShowHint, () => { audioFx.Toggle(); UI.SetSound(audioFx.Muted); });
+            UI.Initialize(catalog, TogglePause, ConfirmRetry, () => { audioFx.Toggle(); UI.SetSound(audioFx.Muted); });
             UI.SetSound(audioFx.Muted);
             var bg = new GameObject("Mart and parking background").AddComponent<SpriteRenderer>();
             bg.sprite = catalog.background; bg.sortingOrder = -20;
@@ -66,7 +66,6 @@ namespace BusJam
             FitCamera();
             int saved = Mathf.Clamp(PlayerPrefs.GetInt("BusJam.Level", 0), 0, catalog.levels.Length - 1);
             LoadLevel(saved);
-            UI.Show("BUS JAM", "Clear the parking lot.\nMatch the first passenger's color.\nCars carry 4 • Buses carry 6", "LET'S PLAY", () => UI.Hide());
         }
 
         private void Update()
@@ -134,7 +133,7 @@ namespace BusJam
             }
             for (int i = 0; i < slots.Count; i++) { slots[i].gameObject.SetActive(i < level.bayCount); slots[i].transform.position = BayPosition(i, level.bayCount); }
             RefreshPassengers(false);
-            UI.Hide(); UI.Refresh(LevelIndex, State); UI.Hint(level.hint); IsBusy = false;
+            UI.Hide(); UI.Refresh(LevelIndex, State); IsBusy = false;
         }
 
         public DispatchResult TryDispatch(int id)
@@ -145,7 +144,6 @@ namespace BusJam
             else if (result == DispatchResult.Blocked || result == DispatchResult.BaysFull)
             {
                 audioFx.Play(Cue.Bump);
-                UI.Hint(result == DispatchResult.Blocked ? "Path blocked. Clear the vehicle in front first." : "All bays are occupied. Match the first passenger to free a bay.");
                 var v = buses[id].Placement;
                 buses[id].transform.DOKill(); buses[id].transform.localScale = Vector3.one;
                 buses[id].transform.position = origin + new Vector2(v.x + v.Width * .5f, v.y + v.Height * .5f) * cell;
@@ -214,7 +212,6 @@ namespace BusJam
             IsBusy = false; flow = null;
             if (State.Won) Finish(true);
             else if (State.Deadlocked || State.GridJammed) Finish(false);
-            else UI.Hint(State.Remaining > 0 ? $"Next passenger: {State.Level.passengers[State.PassengerIndex].ToString().ToUpperInvariant()}. Find a matching vehicle." : "Deliver the remaining vehicles.");
         }
 
         private void RefreshPassengers(bool animate)
@@ -254,16 +251,16 @@ namespace BusJam
                 PlayerPrefs.SetInt("BusJam.Level", next); PlayerPrefs.Save();
                 for (int i = 0; i < 8; i++) Pools.Puff(new Vector3(-3.5f + i, 5, 0), GameCatalog.Tint((ColorID)(i % 4)), 22, true);
                 bool last = LevelIndex == catalog.levels.Length - 1;
-                UI.Show(last ? "ALL CLEAR!" : "LEVEL CLEAR!", $"{State.Level.passengers.Count} happy passengers.\nEvery vehicle delivered!" + (last ? "\nYou completed all five levels." : ""), last ? "PLAY AGAIN" : "NEXT LEVEL", () => LoadLevel(last ? 0 : LevelIndex + 1), "REPLAY LEVEL", () => LoadLevel(LevelIndex));
+                UI.Show(last ? "GAME COMPLETED!" : "LEVEL CLEARED!", null, last ? "PLAY AGAIN" : "NEXT LEVEL", () => LoadLevel(last ? 0 : LevelIndex + 1), "REPLAY", () => LoadLevel(LevelIndex));
             }
-            else UI.Show("TRAFFIC JAM!", State.Deadlocked ? "The bays are full and the first passenger has no matching vehicle. Try a different order." : "The remaining vehicles block each other. Try a different route.", "TRY AGAIN", () => LoadLevel(LevelIndex));
+            else UI.Show("GAME OVER", State.Deadlocked ? "Bays are full!" : "No valid moves left!", "RETRY", () => LoadLevel(LevelIndex));
         }
 
         public void TogglePause()
         {
             if (roundOver || (UI.ModalVisible && !paused)) return;
             paused = !paused; Time.timeScale = paused ? 0 : 1;
-            if (paused) UI.Show("TAKE A BREAK", "Your passengers will wait for you.", "RESUME", TogglePause, "RETRY LEVEL", () => LoadLevel(LevelIndex));
+            if (paused) UI.Show("PAUSED", null, "RESUME", TogglePause, "RETRY", () => LoadLevel(LevelIndex));
             else UI.Hide();
         }
 
@@ -271,17 +268,7 @@ namespace BusJam
         {
             if (UI.ModalVisible) return;
             paused = true; Time.timeScale = 0;
-            UI.Show("START OVER?", "Restart this level with a fresh parking lot.", "RETRY LEVEL", () => LoadLevel(LevelIndex), "KEEP PLAYING", () => { paused = false; Time.timeScale = 1; UI.Hide(); });
-        }
-
-        public void ShowHint()
-        {
-            if (IsBusy || roundOver || UI.ModalVisible) return;
-            var solution = LevelSolver.Solve(State, 30000);
-            if (solution == null || solution.Count == 0) { UI.Hint("No route found within the hint search. Try another move, or retry."); return; }
-            var bus = buses[solution[0]];
-            bus.transform.DOPunchScale(Vector3.one * .18f, .6f, 2);
-            UI.Hint($"Try the highlighted {bus.Placement.color.ToString().ToLowerInvariant()} {bus.Placement.kind.ToString().ToLowerInvariant()}.");
+            UI.Show("RETRY LEVEL?", null, "RETRY", () => LoadLevel(LevelIndex), "CANCEL", () => { paused = false; Time.timeScale = 1; UI.Hide(); });
         }
 
         private void OnDestroy() { Time.timeScale = 1; DOTween.KillAll(); }

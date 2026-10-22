@@ -16,8 +16,7 @@ namespace TuberLevels
             count = amount;
         }
     }
-
-    // Authoring and verification only; never called during normal play.
+    
     public static class LevelSolver
     {
         public static bool Solve(List<List<WaterColor>> input, out List<PourMove> solution, int budget = 150000)
