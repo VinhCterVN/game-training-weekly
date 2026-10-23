@@ -4,31 +4,31 @@ namespace BusJam
 {
     public class GameAudio : MonoBehaviour
     {
-        private AudioSource source;
-        private AudioClip[] clips;
+        private AudioSource _source;
+        private AudioClip[] _clips;
         public bool Muted { get; private set; }
 
         public void Initialize()
         {
-            source = gameObject.AddComponent<AudioSource>();
-            source.playOnAwake = false;
-            clips = new AudioClip[7];
-            for (int i = 0; i < clips.Length; i++) clips[i] = Synthesize((Cue)i);
+            _source = gameObject.AddComponent<AudioSource>();
+            _source.playOnAwake = false;
+            _clips = new AudioClip[7];
+            for (int i = 0; i < _clips.Length; i++) _clips[i] = Synthesize((Cue)i);
             Muted = PlayerPrefs.GetInt("BusJam.Muted", 0) == 1;
-            source.mute = Muted;
+            _source.mute = Muted;
         }
 
         public void Toggle()
         {
             Muted = !Muted;
-            source.mute = Muted;
+            _source.mute = Muted;
             PlayerPrefs.SetInt("BusJam.Muted", Muted ? 1 : 0);
             PlayerPrefs.Save();
         }
 
         public void Play(Cue cue)
         {
-            if (source != null) source.PlayOneShot(clips[(int)cue], .36f);
+            if (_source != null) _source.PlayOneShot(_clips[(int)cue], .36f);
         }
 
         // Original lightweight synthesized cues, allocated once during startup.

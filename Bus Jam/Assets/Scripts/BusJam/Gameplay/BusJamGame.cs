@@ -14,22 +14,22 @@ namespace BusJam
         [Min(.02f)] public float selectionDelay = .15f;
         [Min(.02f)] public float boardingInterval = .07f;
         public RoundState State { get; private set; }
-        public bool IsBusy => loading || activeMotions > 0 || (State != null && State.BoardingTarget() >= 0);
+        public bool IsBusy => _loading || _activeMotions > 0 || (State != null && State.BoardingTarget() >= 0);
         public int LevelIndex { get; private set; }
         public GameUI UI { get; private set; }
         public GamePools Pools { get; private set; }
-        private GameAudio audioFx;
-        private readonly List<BusController> buses = new List<BusController>();
-        private readonly List<PassengerController> passengers = new List<PassengerController>();
-        private readonly List<PassengerController> seated = new List<PassengerController>();
-        private float cell;
-        private Vector2 origin;
-        private bool paused, roundOver, loading;
-        private int width, height;
-        private float nextExhaust, nextSelection, nextBoarding;
-        private int activeMotions;
-        private int[] boardingInFlight, boardedCounts;
-        private Transform world;
+        private GameAudio _audioFx;
+        private readonly List<BusController> _buses = new();
+        private readonly List<PassengerController> _passengers = new();
+        private readonly List<PassengerController> _seated = new();
+        private float _cell;
+        private Vector2 _origin;
+        private bool _paused, _roundOver, _loading;
+        private int _width, _height;
+        private float _nextExhaust, _nextSelection, _nextBoarding;
+        private int _activeMotions;
+        private int[] _boardingInFlight, _boardedCounts;
+        private Transform _world;
         private const int VisiblePassengers = 20;
 
         private void Start()
@@ -52,18 +52,18 @@ namespace BusJam
 
             int maxVehicles = 1;
             foreach (var level in catalog.levels) maxVehicles = Mathf.Max(maxVehicles, level.vehicles.Count);
-            world = new GameObject("Pooled gameplay").transform;
-            world.SetParent(transform, false);
-            Pools = new GamePools(catalog, world, maxVehicles);
-            audioFx = gameObject.AddComponent<GameAudio>();
-            audioFx.Initialize();
+            _world = new GameObject("Pooled gameplay").transform;
+            _world.SetParent(transform, false);
+            Pools = new GamePools(catalog, _world, maxVehicles);
+            _audioFx = gameObject.AddComponent<GameAudio>();
+            _audioFx.Initialize();
             UI = new GameObject("Game UI", typeof(RectTransform)).AddComponent<GameUI>();
             UI.Initialize(catalog, TogglePause, ConfirmRetry, () =>
             {
-                audioFx.Toggle();
-                UI.SetSound(audioFx.Muted);
+                _audioFx.Toggle();
+                UI.SetSound(_audioFx.Muted);
             });
-            UI.SetSound(audioFx.Muted);
+            UI.SetSound(_audioFx.Muted);
             FitCamera();
             int saved = Mathf.Clamp(PlayerPrefs.GetInt("BusJam.Level", 0), 0, catalog.levels.Length - 1);
             LoadLevel(saved);
@@ -73,17 +73,17 @@ namespace BusJam
         {
             if (Pools == null) return;
             Pools.Tick();
-            if (State != null && Time.time >= nextExhaust)
+            if (State != null && Time.time >= _nextExhaust)
             {
-                nextExhaust = Time.time + .13f;
-                for (int i = 0; i < buses.Count; i++)
+                _nextExhaust = Time.time + .13f;
+                for (int i = 0; i < _buses.Count; i++)
                     if (State.Phases[i] == VehiclePhase.Arriving || State.Phases[i] == VehiclePhase.Departing)
-                        Pools.Puff(buses[i].tail.position, new Color(.94f, .96f, 1, .6f), 3);
+                        Pools.Puff(_buses[i].tail.position, new Color(.94f, .96f, 1, .6f), 3);
             }
 
-            if (Screen.width != width || Screen.height != height) FitCamera();
+            if (Screen.width != _width || Screen.height != _height) FitCamera();
             if (Input.GetKeyDown(KeyCode.Escape)) TogglePause();
-            if (loading || State == null || roundOver || paused || UI.ModalVisible) return;
+            if (_loading || State == null || _roundOver || _paused || UI.ModalVisible) return;
             LaunchNextPassenger();
             if (!IsBusy)
             {
@@ -91,7 +91,7 @@ namespace BusJam
                 else if (State.Deadlocked || State.GridJammed) Finish(false);
             }
 
-            if (roundOver || Time.time < nextSelection) return;
+            if (_roundOver || Time.time < _nextSelection) return;
             Vector2 screen;
             if (Input.touchCount > 0)
             {
@@ -113,9 +113,9 @@ namespace BusJam
 
         private void FitCamera()
         {
-            width = Screen.width;
-            height = Screen.height;
-            float aspect = width / (float)height, target = 1080f / 1920;
+            _width = Screen.width;
+            _height = Screen.height;
+            float aspect = _width / (float)_height, target = 1080f / 1920;
             gameCamera.rect = aspect > target
                 ? new Rect((1 - target / aspect) * .5f, 0, target / aspect, 1)
                 : new Rect(0, (1 - aspect / target) * .5f, 1, aspect / target);
@@ -124,27 +124,27 @@ namespace BusJam
 
         public void LoadLevel(int index)
         {
-            loading = true;
+            _loading = true;
             Time.timeScale = 1;
-            paused = false;
+            _paused = false;
             StopAllCoroutines();
-            activeMotions = 0;
-            nextSelection = nextBoarding = nextExhaust = Time.time;
+            _activeMotions = 0;
+            _nextSelection = _nextBoarding = _nextExhaust = Time.time;
             gameCamera.transform.DOKill();
             gameCamera.transform.position = new Vector3(0, 0, -10);
-            foreach (var p in seated)
+            foreach (var p in _seated)
             {
-                p.transform.SetParent(world, true);
+                p.transform.SetParent(_world, true);
                 Pools.Passengers.Release(p);
             }
 
-            seated.Clear();
-            foreach (var p in passengers) Pools.Passengers.Release(p);
-            passengers.Clear();
-            foreach (var b in buses)
+            _seated.Clear();
+            foreach (var p in _passengers) Pools.Passengers.Release(p);
+            _passengers.Clear();
+            foreach (var b in _buses)
                 if (b != null && b.gameObject.activeSelf)
                     Pools.Vehicles.Release(b);
-            buses.Clear();
+            _buses.Clear();
             Pools.ClearEffects();
             LevelIndex = Mathf.Clamp(index, 0, catalog.levels.Length - 1);
             var level = catalog.levels[LevelIndex];
@@ -159,18 +159,18 @@ namespace BusJam
             PlayerPrefs.SetInt("BusJam.Level", LevelIndex);
             PlayerPrefs.Save();
             State = new RoundState(level);
-            boardingInFlight = new int[level.vehicles.Count];
-            boardedCounts = new int[level.vehicles.Count];
-            roundOver = false;
-            cell = Mathf.Min(8.5f / level.columns, 7.2f / level.rows);
-            origin = new Vector2(-level.columns * cell * .5f, -2.75f - level.rows * cell * .5f);
+            _boardingInFlight = new int[level.vehicles.Count];
+            _boardedCounts = new int[level.vehicles.Count];
+            _roundOver = false;
+            _cell = Mathf.Min(8.5f / level.columns, 7.2f / level.rows);
+            _origin = new Vector2(-level.columns * _cell * .5f, -2.75f - level.rows * _cell * .5f);
             for (int i = 0; i < level.vehicles.Count; i++)
             {
                 var v = level.vehicles[i];
                 var bus = Pools.Vehicles.Get();
-                bus.Configure(i, v, catalog, cell,
-                    origin + new Vector2(v.x + v.Width * .5f, v.y + v.Height * .5f) * cell);
-                buses.Add(bus);
+                bus.Configure(i, v, catalog, _cell,
+                    _origin + new Vector2(v.x + v.Width * .5f, v.y + v.Height * .5f) * _cell);
+                _buses.Add(bus);
             }
 
             for (int i = 0; i < parkingBays.Length; i++)
@@ -182,29 +182,30 @@ namespace BusJam
             RefreshPassengers(false);
             UI.Hide();
             UI.Refresh(LevelIndex, State);
-            loading = false;
+            _loading = false;
         }
 
         public DispatchResult TryDispatch(int id)
         {
-            if (loading || State == null || paused || roundOver || UI.ModalVisible || Time.time < nextSelection)
+            if (_loading || State == null || _paused || _roundOver || UI.ModalVisible || Time.time < _nextSelection)
                 return DispatchResult.Unavailable;
             var result = State.Dispatch(id);
             if (result == DispatchResult.Accepted)
             {
-                nextSelection = Time.time + Mathf.Max(.02f, selectionDelay);
+                _nextSelection = Time.time + Mathf.Max(.02f, selectionDelay);
                 StartCoroutine(DispatchFlow(id));
             }
             else if (result == DispatchResult.Blocked || result == DispatchResult.BaysFull)
             {
-                audioFx.Play(Cue.Bump);
-                var v = buses[id].Placement;
-                buses[id].transform.DOKill();
-                buses[id].transform.localScale = Vector3.one;
-                buses[id].transform.position = origin + new Vector2(v.x + v.Width * .5f, v.y + v.Height * .5f) * cell;
-                buses[id].transform.DOPunchPosition((Vector3)(Vector2)v.Direction * .13f, .3f, 5, .5f);
+                _audioFx.Play(Cue.Bump);
+                var v = _buses[id].Placement;
+                _buses[id].transform.DOKill();
+                _buses[id].transform.localScale = Vector3.one;
+                _buses[id].transform.position =
+                    _origin + new Vector2(v.x + v.Width * .5f, v.y + v.Height * .5f) * _cell;
+                _buses[id].transform.DOPunchPosition((Vector3)(Vector2)v.Direction * .13f, .3f, 5, .5f);
                 Shake(.035f);
-                Pools.Puff(buses[id].head.position, new Color(1, .8f, .25f), 6);
+                Pools.Puff(_buses[id].head.position, new Color(1, .8f, .25f), 6);
             }
 
             return result;
@@ -212,20 +213,21 @@ namespace BusJam
 
         private IEnumerator DispatchFlow(int id)
         {
-            activeMotions++;
-            var bus = buses[id];
+            _activeMotions++;
+            var bus = _buses[id];
             var v = bus.Placement;
             bus.hitbox.enabled = false;
             bus.transform.DOKill();
-            bus.transform.position = origin + new Vector2(v.x + v.Width * .5f, v.y + v.Height * .5f) * cell;
+            bus.transform.position = _origin + new Vector2(v.x + v.Width * .5f, v.y + v.Height * .5f) * _cell;
             bus.transform.localScale = Vector3.one;
-            audioFx.Play(Cue.Tap);
-            audioFx.Play(Cue.Engine);
+            _audioFx.Play(Cue.Tap);
+            _audioFx.Play(Cue.Engine);
             bus.transform.DOPunchScale(new Vector3(.07f, -.05f, 0), .25f, 1);
             Vector3 start = bus.transform.position;
-            float left = origin.x - v.Length * cell * .55f - .15f, right = -origin.x + v.Length * cell * .55f + .15f;
-            float bottom = origin.y - v.Length * cell * .55f - .2f,
-                top = origin.y + State.Level.rows * cell + v.Length * cell * .55f + .15f;
+            float left = _origin.x - v.Length * _cell * .55f - .15f,
+                right = -_origin.x + v.Length * _cell * .55f + .15f;
+            float bottom = _origin.y - v.Length * _cell * .55f - .2f,
+                top = _origin.y + State.Level.rows * _cell + v.Length * _cell * .55f + .15f;
             Vector3 exit = start;
             if (v.facing == Facing.Up) exit.y = top;
             else if (v.facing == Facing.Down) exit.y = bottom;
@@ -257,23 +259,23 @@ namespace BusJam
             bus.Park();
             State.Arrive(id);
             UI.Refresh(LevelIndex, State);
-            activeMotions--;
+            _activeMotions--;
         }
 
         private void LaunchNextPassenger()
         {
-            if (Time.time < nextBoarding) return;
+            if (Time.time < _nextBoarding) return;
             int target = State.BoardingTarget();
             if (target < 0) return;
 
-            var passenger = passengers[0];
-            passengers.RemoveAt(0);
-            seated.Add(passenger);
+            var passenger = _passengers[0];
+            _passengers.RemoveAt(0);
+            _seated.Add(passenger);
             int seat = State.Loads[target];
             // Reserve the queue entry and seat before another passenger can launch.
             State.Board(target);
-            boardingInFlight[target]++;
-            nextBoarding = Time.time + Mathf.Max(.02f, boardingInterval);
+            _boardingInFlight[target]++;
+            _nextBoarding = Time.time + Mathf.Max(.02f, boardingInterval);
             passenger.transform.DOKill();
             StartCoroutine(BoardPassenger(passenger, target, seat));
             RefreshPassengers(true);
@@ -282,37 +284,37 @@ namespace BusJam
 
         private IEnumerator BoardPassenger(PassengerController passenger, int target, int seat)
         {
-            activeMotions++;
-            var vehicle = buses[target];
-            audioFx.Play(Cue.Step);
+            _activeMotions++;
+            var vehicle = _buses[target];
+            _audioFx.Play(Cue.Step);
             yield return passenger.transform.DOJump(vehicle.seats[seat].position, .35f, 1, .22f)
                 .SetEase(Ease.OutQuad).WaitForCompletion();
             passenger.transform.SetParent(vehicle.transform, true);
             passenger.transform.localScale = Vector3.one * .6f;
-            vehicle.SetCount(++boardedCounts[target]);
-            boardingInFlight[target]--;
-            activeMotions--;
+            vehicle.SetCount(++_boardedCounts[target]);
+            _boardingInFlight[target]--;
+            _activeMotions--;
             // A full reservation does not mean every passenger has landed yet.
-            if (State.Phases[target] == VehiclePhase.Departing && boardingInFlight[target] == 0)
+            if (State.Phases[target] == VehiclePhase.Departing && _boardingInFlight[target] == 0)
                 StartCoroutine(DepartVehicle(target));
         }
 
         private IEnumerator DepartVehicle(int target)
         {
-            activeMotions++;
-            var vehicle = buses[target];
-            for (int i = seated.Count - 1; i >= 0; i--)
-                if (seated[i].transform.parent == vehicle.transform)
+            _activeMotions++;
+            var vehicle = _buses[target];
+            for (int i = _seated.Count - 1; i >= 0; i--)
+                if (_seated[i].transform.parent == vehicle.transform)
                 {
-                    var p = seated[i];
-                    p.transform.SetParent(world, true);
+                    var p = _seated[i];
+                    p.transform.SetParent(_world, true);
                     Pools.Passengers.Release(p);
-                    seated.RemoveAt(i);
+                    _seated.RemoveAt(i);
                 }
 
             vehicle.CloseRoof();
-            audioFx.Play(Cue.Honk);
-            audioFx.Play(Cue.Engine);
+            _audioFx.Play(Cue.Honk);
+            _audioFx.Play(Cue.Engine);
             Shake(.06f);
             vehicle.transform.DOPunchScale(new Vector3(.12f, -.06f, 0), .3f, 1);
             Pools.Puff(vehicle.tail.position, new Color(.94f, .96f, 1, .85f), 14);
@@ -320,19 +322,19 @@ namespace BusJam
             State.Depart(target);
             Pools.Vehicles.Release(vehicle);
             UI.Refresh(LevelIndex, State);
-            activeMotions--;
+            _activeMotions--;
         }
 
         private void RefreshPassengers(bool animate)
         {
             int desired = Mathf.Min(VisiblePassengers, State.Remaining);
-            while (passengers.Count < desired) passengers.Add(Pools.Passengers.Get());
-            for (int i = 0; i < passengers.Count; i++)
+            while (_passengers.Count < desired) _passengers.Add(Pools.Passengers.Get());
+            for (int i = 0; i < _passengers.Count; i++)
             {
-                var p = passengers[i];
+                var p = _passengers[i];
                 var end = PassengerPosition(i);
                 p.body.color = GameCatalog.Tint(State.Level.passengers[State.PassengerIndex + i]);
-                if (!animate || i == passengers.Count - 1)
+                if (!animate || i == _passengers.Count - 1)
                     p.Configure(State.Level.passengers[State.PassengerIndex + i], end);
                 else
                 {
@@ -360,8 +362,8 @@ namespace BusJam
 
         private void Finish(bool won)
         {
-            roundOver = true;
-            audioFx.Play(won ? Cue.Win : Cue.Lose);
+            _roundOver = true;
+            _audioFx.Play(won ? Cue.Win : Cue.Lose);
             if (won)
             {
                 int next = Mathf.Min(LevelIndex + 1, catalog.levels.Length - 1);
@@ -380,21 +382,21 @@ namespace BusJam
 
         public void TogglePause()
         {
-            if (roundOver || (UI.ModalVisible && !paused)) return;
-            paused = !paused;
-            Time.timeScale = paused ? 0 : 1;
-            if (paused) UI.Show("PAUSED", null, "RESUME", TogglePause, "RETRY", () => LoadLevel(LevelIndex));
+            if (_roundOver || (UI.ModalVisible && !_paused)) return;
+            _paused = !_paused;
+            Time.timeScale = _paused ? 0 : 1;
+            if (_paused) UI.Show("PAUSED", null, "RESUME", TogglePause, "RETRY", () => LoadLevel(LevelIndex));
             else UI.Hide();
         }
 
         private void ConfirmRetry()
         {
             if (UI.ModalVisible) return;
-            paused = true;
+            _paused = true;
             Time.timeScale = 0;
             UI.Show("RETRY LEVEL?", null, "RETRY", () => LoadLevel(LevelIndex), "CANCEL", () =>
             {
-                paused = false;
+                _paused = false;
                 Time.timeScale = 1;
                 UI.Hide();
             });

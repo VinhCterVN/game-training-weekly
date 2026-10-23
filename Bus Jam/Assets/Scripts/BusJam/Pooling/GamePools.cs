@@ -9,7 +9,7 @@ namespace BusJam
         public readonly ObjectPool<BusController> Vehicles;
         public readonly ObjectPool<PassengerController> Passengers;
         public readonly ObjectPool<ParticleSystem> Effects;
-        private readonly List<ParticleSystem> activeEffects = new List<ParticleSystem>();
+        private readonly List<ParticleSystem> _activeEffects = new();
 
         public GamePools(GameCatalog catalog, Transform root, int vehicleCount)
         {
@@ -47,23 +47,23 @@ namespace BusJam
             main.gravityModifier = confetti ? .4f : -.04f;
             main.startLifetime = confetti ? 2.1f : .55f;
             ps.Emit(count);
-            activeEffects.Add(ps);
+            _activeEffects.Add(ps);
         }
 
         public void Tick()
         {
-            for (int i = activeEffects.Count - 1; i >= 0; i--)
-                if (!activeEffects[i].IsAlive())
+            for (int i = _activeEffects.Count - 1; i >= 0; i--)
+                if (!_activeEffects[i].IsAlive())
                 {
-                    Effects.Release(activeEffects[i]);
-                    activeEffects.RemoveAt(i);
+                    Effects.Release(_activeEffects[i]);
+                    _activeEffects.RemoveAt(i);
                 }
         }
 
         public void ClearEffects()
         {
-            foreach (var ps in activeEffects) Effects.Release(ps);
-            activeEffects.Clear();
+            foreach (var ps in _activeEffects) Effects.Release(ps);
+            _activeEffects.Clear();
         }
     }
 }
