@@ -18,6 +18,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 431045c4f75d90f4f85e267f6d8eb61e, type: 2}
   - {fileID: 11400000, guid: bd674206265d0174494ca82fec260b56, type: 2}
   - {fileID: 11400000, guid: 6b8e9d27444b5864583fd5a181ea8bfd, type: 2}
+  - {fileID: 11400000, guid: 426ae2936014484449ebba562f6a4c1e, type: 2}
+  - {fileID: 11400000, guid: 77014f59d4f1c6241a4266dc770bb8b1, type: 2}
+  - {fileID: 11400000, guid: 951d68ab5b2f0964cb36b5de6d03546f, type: 2}
+  - {fileID: 11400000, guid: 4ce6fc0f4800d54459b46eba029a1864, type: 2}
+  - {fileID: 11400000, guid: 9db6078015ae2bb47a8cc7d825086214, type: 2}
   vehicles:
   - kind: 0
     color: 0
