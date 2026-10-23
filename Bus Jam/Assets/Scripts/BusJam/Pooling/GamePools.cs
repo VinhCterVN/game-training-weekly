@@ -13,10 +13,19 @@ namespace BusJam
 
         public GamePools(GameCatalog catalog, Transform root, int vehicleCount)
         {
-            Vehicles = new ObjectPool<BusController>(() => Object.Instantiate(catalog.busPrefab, root), v => v.gameObject.SetActive(true), v => v.ResetView(), null, true, vehicleCount, vehicleCount);
-            Passengers = new ObjectPool<PassengerController>(() => Object.Instantiate(catalog.passengerPrefab, root), p => p.gameObject.SetActive(true), p => p.ResetView(), null, true, 40, 40);
-            Effects = new ObjectPool<ParticleSystem>(() => Object.Instantiate(catalog.particlePrefab, root), p => p.gameObject.SetActive(true), p => { p.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear); p.gameObject.SetActive(false); }, null, true, 24, 24);
-            Warm(Vehicles, vehicleCount); Warm(Passengers, 40); Warm(Effects, 24);
+            Vehicles = new ObjectPool<BusController>(() => Object.Instantiate(catalog.busPrefab, root),
+                v => v.gameObject.SetActive(true), v => v.ResetView(), null, true, vehicleCount, vehicleCount);
+            Passengers = new ObjectPool<PassengerController>(() => Object.Instantiate(catalog.passengerPrefab, root),
+                p => p.gameObject.SetActive(true), p => p.ResetView(), null, true, 40, 40);
+            Effects = new ObjectPool<ParticleSystem>(() => Object.Instantiate(catalog.particlePrefab, root),
+                p => p.gameObject.SetActive(true), p =>
+                {
+                    p.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                    p.gameObject.SetActive(false);
+                }, null, true, 24, 24);
+            Warm(Vehicles, vehicleCount);
+            Warm(Passengers, 40);
+            Warm(Effects, 24);
         }
 
         private static void Warm<T>(ObjectPool<T> pool, int count) where T : class
@@ -44,7 +53,11 @@ namespace BusJam
         public void Tick()
         {
             for (int i = activeEffects.Count - 1; i >= 0; i--)
-                if (!activeEffects[i].IsAlive()) { Effects.Release(activeEffects[i]); activeEffects.RemoveAt(i); }
+                if (!activeEffects[i].IsAlive())
+                {
+                    Effects.Release(activeEffects[i]);
+                    activeEffects.RemoveAt(i);
+                }
         }
 
         public void ClearEffects()

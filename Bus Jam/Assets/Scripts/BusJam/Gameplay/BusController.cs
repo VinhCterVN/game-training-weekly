@@ -21,7 +21,10 @@ namespace BusJam
 
         public void Configure(int id, VehiclePlacement placement, GameCatalog art, float cellSize, Vector3 position)
         {
-            Id = id; Placement = placement; catalog = art; cell = cellSize;
+            Id = id;
+            Placement = placement;
+            catalog = art;
+            cell = cellSize;
             if (defaultMaterial == null) defaultMaterial = body.sharedMaterial;
             body.sharedMaterial = placement.color == ColorID.Green ? catalog.greenVehicleMaterial : defaultMaterial;
             transform.position = position;
@@ -46,11 +49,14 @@ namespace BusJam
             body.transform.localScale = scale;
             body.transform.localPosition = -Vector3.Scale(bounds.center, scale);
             hitbox.size = new Vector2(width * .94f, height * .94f);
-            var direction = facing == Facing.Up ? Vector3.up : facing == Facing.Down ? Vector3.down : facing == Facing.Left ? Vector3.left : Vector3.right;
+            var direction = facing == Facing.Up ? Vector3.up :
+                facing == Facing.Down ? Vector3.down :
+                facing == Facing.Left ? Vector3.left : Vector3.right;
             head.localPosition = direction * Placement.Length * cell * .45f;
             tail.localPosition = -head.localPosition;
             for (int i = 0; i < seats.Length; i++)
-                seats[i].localPosition = new Vector3((i % 2 == 0 ? -.19f : .19f) * cell, (.25f + (i / 2) * .43f) * cell, 0);
+                seats[i].localPosition =
+                    new Vector3((i % 2 == 0 ? -.19f : .19f) * cell, (.25f + (i / 2) * .43f) * cell, 0);
             count.transform.localPosition = new Vector3(0, -height * .5f - .14f, -.1f);
         }
 
@@ -69,7 +75,8 @@ namespace BusJam
 
         public void ResetView()
         {
-            transform.DOKill(); body.transform.DOKill();
+            transform.DOKill();
+            body.transform.DOKill();
             hitbox.enabled = false;
             gameObject.SetActive(false);
         }

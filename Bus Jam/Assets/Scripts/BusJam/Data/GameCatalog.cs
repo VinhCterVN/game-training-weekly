@@ -1,17 +1,7 @@
-using System;
 using UnityEngine;
 
 namespace BusJam
 {
-    [Serializable]
-    public class VehicleArt
-    {
-        public VehicleKind kind;
-        public ColorID color;
-        public Sprite[] closed = new Sprite[4];
-        public Sprite[] seats = new Sprite[4];
-    }
-
     public class GameCatalog : ScriptableObject
     {
         public LevelDataSO[] levels;
@@ -26,8 +16,9 @@ namespace BusJam
 
         public Sprite Vehicle(VehicleKind kind, ColorID color, Facing facing, bool open)
         {
-            foreach (var art in vehicles) if (art.kind == kind && art.color == color)
-                return (open ? art.seats : art.closed)[(int)facing];
+            foreach (var art in vehicles)
+                if (art.kind == kind && art.color == color)
+                    return (open ? art.seats : art.closed)[(int)facing];
             return null;
         }
 

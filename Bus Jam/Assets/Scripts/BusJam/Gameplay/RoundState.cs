@@ -1,12 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace BusJam
 {
-    public enum VehiclePhase { Grid, Arriving, Waiting, Departing, Delivered }
-    public enum DispatchResult { Accepted, Blocked, BaysFull, Unavailable }
-
     // Authoritative rules. Animation only acknowledges transitions; it never determines occupancy.
     public sealed class RoundState
     {
@@ -43,12 +39,18 @@ namespace BusJam
         public int[,] Occupancy()
         {
             var cells = new int[Level.columns, Level.rows];
-            for (int x = 0; x < Level.columns; x++) for (int y = 0; y < Level.rows; y++) cells[x, y] = -1;
-            for (int i = 0; i < Phases.Length; i++) if (Phases[i] == VehiclePhase.Grid)
-            {
-                var v = Level.vehicles[i];
-                for (int x = v.x; x < v.x + v.Width; x++) for (int y = v.y; y < v.y + v.Height; y++) cells[x, y] = i;
-            }
+            for (int x = 0; x < Level.columns; x++)
+            for (int y = 0; y < Level.rows; y++)
+                cells[x, y] = -1;
+            for (int i = 0; i < Phases.Length; i++)
+                if (Phases[i] == VehiclePhase.Grid)
+                {
+                    var v = Level.vehicles[i];
+                    for (int x = v.x; x < v.x + v.Width; x++)
+                    for (int y = v.y; y < v.y + v.Height; y++)
+                        cells[x, y] = i;
+                }
+
             return cells;
         }
 
@@ -61,10 +63,14 @@ namespace BusJam
             int px = v.x, py = v.y;
             while (true)
             {
-                px += step.x; py += step.y;
+                px += step.x;
+                py += step.y;
                 if (px + v.Width <= 0 || py + v.Height <= 0 || px >= Level.columns || py >= Level.rows) return true;
-                for (int x = px; x < px + v.Width; x++) for (int y = py; y < py + v.Height; y++)
-                    if (x >= 0 && x < Level.columns && y >= 0 && y < Level.rows && cells[x, y] >= 0 && cells[x, y] != id) return false;
+                for (int x = px; x < px + v.Width; x++)
+                for (int y = py; y < py + v.Height; y++)
+                    if (x >= 0 && x < Level.columns && y >= 0 && y < Level.rows && cells[x, y] >= 0 &&
+                        cells[x, y] != id)
+                        return false;
             }
         }
 
@@ -83,7 +89,8 @@ namespace BusJam
 
         public void Arrive(int id)
         {
-            if (Phases[id] != VehiclePhase.Arriving) throw new InvalidOperationException("Only an arriving vehicle can park.");
+            if (Phases[id] != VehiclePhase.Arriving)
+                throw new InvalidOperationException("Only an arriving vehicle can park.");
             Phases[id] = VehiclePhase.Waiting;
         }
 
@@ -91,13 +98,17 @@ namespace BusJam
         {
             if (Remaining == 0) return -1;
             foreach (int id in Bays)
-                if (id >= 0 && Phases[id] == VehiclePhase.Waiting && Level.vehicles[id].color == Level.passengers[PassengerIndex] && Loads[id] < Level.vehicles[id].Capacity) return id;
+                if (id >= 0 && Phases[id] == VehiclePhase.Waiting &&
+                    Level.vehicles[id].color == Level.passengers[PassengerIndex] &&
+                    Loads[id] < Level.vehicles[id].Capacity)
+                    return id;
             return -1;
         }
 
         public void Board(int id)
         {
-            if (BoardingTarget() != id) throw new InvalidOperationException("Only the first passenger may board a matching waiting vehicle.");
+            if (BoardingTarget() != id)
+                throw new InvalidOperationException("Only the first passenger may board a matching waiting vehicle.");
             Loads[id]++;
             PassengerIndex++;
             if (Loads[id] == Level.vehicles[id].Capacity) Phases[id] = VehiclePhase.Departing;
@@ -105,7 +116,8 @@ namespace BusJam
 
         public void Depart(int id)
         {
-            if (Phases[id] != VehiclePhase.Departing) throw new InvalidOperationException("Vehicle must be full before departure.");
+            if (Phases[id] != VehiclePhase.Departing)
+                throw new InvalidOperationException("Vehicle must be full before departure.");
             Bays[BayOf(id)] = -1;
             Phases[id] = VehiclePhase.Delivered;
             Delivered++;
@@ -116,7 +128,9 @@ namespace BusJam
             get
             {
                 if (Won || BoardingTarget() >= 0) return false;
-                foreach (int id in Bays) if (id < 0 || Phases[id] != VehiclePhase.Waiting) return false;
+                foreach (int id in Bays)
+                    if (id < 0 || Phases[id] != VehiclePhase.Waiting)
+                        return false;
                 return true;
             }
         }
@@ -127,7 +141,8 @@ namespace BusJam
             {
                 if (Won || BoardingTarget() >= 0) return false;
                 for (int i = 0; i < Phases.Length; i++)
-                    if (Phases[i] == VehiclePhase.Arriving || Phases[i] == VehiclePhase.Departing || CanEscape(i)) return false;
+                    if (Phases[i] == VehiclePhase.Arriving || Phases[i] == VehiclePhase.Departing || CanEscape(i))
+                        return false;
                 return true;
             }
         }
@@ -148,35 +163,6 @@ namespace BusJam
             for (int i = 0; i < Phases.Length; i++) s.Append((int)Phases[i]).Append(',').Append(Loads[i]).Append(';');
             foreach (int id in Bays) s.Append(id).Append(',');
             return s.ToString();
-        }
-    }
-
-    public static class LevelSolver
-    {
-        public static List<int> Solve(RoundState start, int maxNodes = 150000)
-        {
-            var visited = new HashSet<string>();
-            var path = new List<int>();
-            int budget = maxNodes;
-            return Search(start, visited, path, ref budget) ? path : null;
-        }
-
-        private static bool Search(RoundState state, HashSet<string> visited, List<int> path, ref int budget)
-        {
-            if (state.Won) return true;
-            if (--budget < 0 || state.Deadlocked || state.GridJammed || !visited.Add(state.Key())) return false;
-            for (int id = 0; id < state.Phases.Length; id++)
-            {
-                if (!state.CanEscape(id)) continue;
-                var next = state.Copy();
-                if (next.Dispatch(id) != DispatchResult.Accepted) continue;
-                next.Arrive(id);
-                next.Settle();
-                path.Add(id);
-                if (Search(next, visited, path, ref budget)) return true;
-                path.RemoveAt(path.Count - 1);
-            }
-            return false;
         }
     }
 }
