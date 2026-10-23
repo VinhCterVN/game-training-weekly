@@ -88,7 +88,6 @@ public static class BusJamSetup
         EditorUtility.SetDirty(catalog);
         AssetDatabase.SaveAssets();
         ConfigurePlayer();
-        // Preserve the original hand-authored scene; the new main scene replaces its missing-script setup.
         if (!File.Exists("Docs/MainScene.before-busjam.unity.txt"))
         {
             Directory.CreateDirectory("Docs");

@@ -15,13 +15,11 @@ namespace BusJam
         private Action primaryAction, secondaryAction;
         private Rect lastSafeArea;
         private int lastWidth, lastHeight;
-        private Sprite buttonSprite;
         private readonly Color ink = new Color(.12f, .19f, .32f);
 
         public void Initialize(GameCatalog catalog, Action pause, Action retry, Action sound)
         {
             font = catalog.font != null ? catalog.font : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            buttonSprite = catalog.button;
             var canvas = gameObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 10;
@@ -40,14 +38,16 @@ namespace BusJam
                 new Color(.1f, .17f, .29f, .94f));
             Text("Brand", top, "BUS JAM", new Vector2(-340, 0), new Vector2(260, 80), 43, Color.white);
             levelText = Text("Level", top, "LEVEL 1", Vector2.zero, new Vector2(330, 80), 39, Color.white);
-            Button("Pause", top, "II", new Vector2(420, 0), new Vector2(90, 80), pause);
             remainingText = Text("Remaining count", portrait, "0", new Vector2(-350, 647), new Vector2(170, 75), 52,
                 Color.white);
             Text("Remaining label", portrait, "WAITING", new Vector2(-350, 600), new Vector2(160, 35), 23, ink);
 
-            Button("Retry", portrait, "RETRY", new Vector2(-180, -850), new Vector2(300, 95), retry);
-            var soundButton = Button("Sound", portrait, "SOUND ON", new Vector2(180, -850), new Vector2(300, 95),
-                sound);
+            var controlColor = new Color(.12f, .19f, .30f, .94f);
+            var controlSize = new Vector2(240, 84);
+            FlatButton("Pause", portrait, "PAUSE", new Vector2(-260, -850), controlSize, controlColor, pause, 28);
+            FlatButton("Retry", portrait, "RETRY", new Vector2(0, -850), controlSize, controlColor, retry, 28);
+            var soundButton = FlatButton("Sound", portrait, "SOUND ON", new Vector2(260, -850), controlSize,
+                controlColor, sound, 28);
             soundText = soundButton.GetComponentInChildren<Text>();
 
             modal = Panel("Modal overlay", canvasRoot, Vector2.zero, Vector2.zero, new Color(.02f, .05f, .1f, .75f))
@@ -188,25 +188,6 @@ namespace BusJam
             t.raycastTarget = false;
             t.horizontalOverflow = HorizontalWrapMode.Wrap;
             return t;
-        }
-
-        private Button Button(string name, Transform parent, string label, Vector2 position, Vector2 size,
-            Action action)
-        {
-            var r = Panel(name, parent, position, size, Color.white);
-            r.GetComponent<Image>().sprite = buttonSprite;
-            var b = r.gameObject.AddComponent<Button>();
-            b.targetGraphic = r.GetComponent<Image>();
-            var colors = b.colors;
-            colors.highlightedColor = new Color(.85f, .95f, 1);
-            colors.pressedColor = new Color(.6f, .78f, 1);
-            b.colors = colors;
-            var labelText = Text("Label", r, label, Vector2.zero, size - new Vector2(12, 6), 31, Color.white);
-            var outline = labelText.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0, .15f, .25f, .5f);
-            outline.effectDistance = new Vector2(1, -1);
-            b.onClick.AddListener(() => action());
-            return b;
         }
 
         private Button FlatButton(string name, Transform parent, string label, Vector2 position, Vector2 size,
