@@ -9,19 +9,20 @@ using UnityEngine;
 
 public static class BusJamSetup
 {
-    private const string Root = "Assets/BusJam";
+    private const string _root = "Assets/Data";
 
     [MenuItem("Bus Jam/Setup Project")]
     public static void Setup()
     {
-        Directory.CreateDirectory(Root + "/Levels");
-        Directory.CreateDirectory(Root + "/Prefabs");
+        Directory.CreateDirectory(_root + "/Levels");
+        Directory.CreateDirectory("Assets/Prefabs");
+        Directory.CreateDirectory("Assets/Materials");
         AssetDatabase.Refresh();
-        var catalog = AssetDatabase.LoadAssetAtPath<GameCatalog>(Root + "/GameCatalog.asset");
+        var catalog = AssetDatabase.LoadAssetAtPath<GameCatalog>(_root + "/GameCatalog.asset");
         if (catalog == null)
         {
             catalog = ScriptableObject.CreateInstance<GameCatalog>();
-            AssetDatabase.CreateAsset(catalog, Root + "/GameCatalog.asset");
+            AssetDatabase.CreateAsset(catalog, _root + "/GameCatalog.asset");
         }
 
         catalog.background = Sprite("Assets/Sprites/UI/background.png");
@@ -52,18 +53,18 @@ public static class BusJamSetup
         }
 
         catalog.vehicles = arts.ToArray();
-        catalog.greenVehicleMaterial = AssetDatabase.LoadAssetAtPath<Material>(Root + "/GreenVehicle.mat");
+        catalog.greenVehicleMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/GreenVehicle.mat");
         if (catalog.greenVehicleMaterial == null)
         {
             catalog.greenVehicleMaterial = new Material(Shader.Find("BusJam/GreenVehicle"));
-            AssetDatabase.CreateAsset(catalog.greenVehicleMaterial, Root + "/GreenVehicle.mat");
+            AssetDatabase.CreateAsset(catalog.greenVehicleMaterial, "Assets/Materials/GreenVehicle.mat");
         }
 
         catalog.levels = new LevelDataSO[5];
         string[] names = { "First departures", "Make some room", "Color connection", "Rush hour", "The grand jam" };
         for (int i = 0; i < 5; i++)
         {
-            string path = $"{Root}/Levels/Level{i + 1:00}.asset";
+            string path = $"{_root}/Levels/Level{i + 1:00}.asset";
             var level = AssetDatabase.LoadAssetAtPath<LevelDataSO>(path);
             if (level == null)
             {
@@ -228,7 +229,7 @@ public static class BusJamSetup
         var textRenderer = bus.count.GetComponent<MeshRenderer>();
         textRenderer.sharedMaterial = catalog.font.material;
         textRenderer.sortingOrder = 70;
-        catalog.busPrefab = PrefabUtility.SaveAsPrefabAsset(root, Root + "/Prefabs/Vehicle.prefab")
+        catalog.busPrefab = PrefabUtility.SaveAsPrefabAsset(root, "Assets/Prefabs/Vehicle.prefab")
             .GetComponent<BusController>();
         UnityEngine.Object.DestroyImmediate(root);
 
@@ -241,7 +242,7 @@ public static class BusJamSetup
         var bounds = BusController.VisibleBounds(catalog.passenger);
         passenger.body.transform.localScale = Vector3.one * (.54f / bounds.size.y);
         passenger.body.transform.localPosition = -bounds.center * (.54f / bounds.size.y);
-        catalog.passengerPrefab = PrefabUtility.SaveAsPrefabAsset(root, Root + "/Prefabs/Passenger.prefab")
+        catalog.passengerPrefab = PrefabUtility.SaveAsPrefabAsset(root, "Assets/Prefabs/Passenger.prefab")
             .GetComponent<PassengerController>();
         UnityEngine.Object.DestroyImmediate(root);
 
@@ -270,7 +271,7 @@ public static class BusJamSetup
         size.size = new ParticleSystem.MinMaxCurve(1, AnimationCurve.Linear(0, .5f, 1, 1.5f));
         var renderer = ps.GetComponent<ParticleSystemRenderer>();
         renderer.sortingOrder = 90;
-        string matPath = Root + "/Exhaust.mat";
+        string matPath = "Assets/Materials/Exhaust.mat";
         var material = AssetDatabase.LoadAssetAtPath<Material>(matPath);
         if (material == null)
         {
@@ -286,7 +287,7 @@ public static class BusJamSetup
         material.EnableKeyword("_ALPHABLEND_ON");
         material.renderQueue = 3000;
         renderer.sharedMaterial = material;
-        catalog.particlePrefab = PrefabUtility.SaveAsPrefabAsset(root, Root + "/Prefabs/Exhaust.prefab")
+        catalog.particlePrefab = PrefabUtility.SaveAsPrefabAsset(root, "Assets/Prefabs/Exhaust.prefab")
             .GetComponent<ParticleSystem>();
         UnityEngine.Object.DestroyImmediate(root);
     }
@@ -320,6 +321,7 @@ public static class BusJamSetup
     public static void BuildWebGL()
     {
         ConfigurePlayer();
+        if (!File.Exists("Assets/Resources/BusJamUI.prefab")) UIBuilder.Generate();
         var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
         {
             scenes = new[] { "Assets/Scenes/MainScene.unity" }, locationPathName = "Builds/WebGL",

@@ -22,7 +22,7 @@ public class BusJamLevelEditor : EditorWindow
     private void OnEnable()
     {
         minSize = new Vector2(520, 600);
-        _catalog = AssetDatabase.LoadAssetAtPath<GameCatalog>("Assets/BusJam/GameCatalog.asset");
+        _catalog = AssetDatabase.LoadAssetAtPath<GameCatalog>("Assets/Data/GameCatalog.asset");
     }
 
     private void Bind()
@@ -194,7 +194,7 @@ public class BusJamLevelEditor : EditorWindow
     private void NewLevel()
     {
         var path = EditorUtility.SaveFilePanelInProject("New Bus Jam level", "Level", "asset",
-            "Choose where to save the level", "Assets/BusJam/Levels");
+            "Choose where to save the level", "Assets/Data/Levels");
         if (string.IsNullOrEmpty(path)) return;
         _level = CreateInstance<LevelDataSO>();
         AssetDatabase.CreateAsset(_level, path);
