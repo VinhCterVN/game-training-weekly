@@ -50,7 +50,7 @@ public static class UIBuilder
             var level = Label("Level", header, "LEVEL 1", new Vector2(-290, 0), new Vector2(330, 70), 40);
             var coinIcon = Coin("Wallet star", header, new Vector2(120, 0), 66);
             var coins = Label("Coins", header, "0", new Vector2(290, 0), new Vector2(250, 80), 40, _gold);
-            var waiting = Label("Waiting", hudRoot, "0\nWAITING", new Vector2(-350, -370), new Vector2(220, 120), 32, Color.white, new Vector2(.5f, 1));
+            var waiting = Label("Waiting", hudRoot, "0\nWAITING", new Vector2(-350, -300), new Vector2(220, 120), 32, Color.white, new Vector2(.5f, 1));
             var settings = Button("Settings", hudRoot, "SETTINGS", new Vector2(-320, 105), new Vector2(290, 90), _navy, new Vector2(.5f, 0));
             var restart = Button("Restart", hudRoot, "RESTART", new Vector2(0, 105), new Vector2(290, 90), _navy, new Vector2(.5f, 0));
             var homeButton = Button("Home", hudRoot, "HOME", new Vector2(320, 105), new Vector2(290, 90), _navy, new Vector2(.5f, 0));
