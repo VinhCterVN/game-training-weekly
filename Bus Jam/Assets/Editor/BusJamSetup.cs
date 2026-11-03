@@ -27,13 +27,7 @@ public static class BusJamSetup
 
         catalog.background = Sprite("Assets/Sprites/UI/background.png");
         catalog.passenger = Sprite("Assets/Sprites/Passengers/passenger_white.png");
-        catalog.slot = Sprite("Assets/Sprites/Park/park_slot_unlock.png");
         catalog.exhaust = Sprite("Assets/Sprites/Vfx/SoftCircle.png");
-        catalog.star = Sprite("Assets/Sprites/UI/star_full.png");
-        catalog.winRays = Sprite("Assets/Sprites/UI/win_rays.png");
-        catalog.button = Sprite("Assets/Sprites/UI/btn_replay.png");
-        catalog.primaryButton = Sprite("Assets/Sprites/UI/btn_next.png");
-        catalog.dialogFrame = Sprite("Assets/Sprites/UI/win_frame.png");
         catalog.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         var arts = new List<VehicleArt>();
         foreach (VehicleKind kind in Enum.GetValues(typeof(VehicleKind)))

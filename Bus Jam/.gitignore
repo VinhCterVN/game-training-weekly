@@ -48,3 +48,7 @@ sysinfo.txt
 *.unitypackage
 *.app
 /[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
+
+.codex/
+graphify-out/
+AGENTS.md

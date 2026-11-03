@@ -14,15 +14,16 @@ namespace BusJam
         public GamePools(GameCatalog catalog, Transform root, int vehicleCount)
         {
             Vehicles = new ObjectPool<BusController>(() => Object.Instantiate(catalog.busPrefab, root),
-                v => v.gameObject.SetActive(true), v => v.ResetView(), null, true, vehicleCount, vehicleCount);
+                v => v.gameObject.SetActive(true), v => v.ResetView(), v => Object.Destroy(v.gameObject), true,
+                vehicleCount, vehicleCount);
             Passengers = new ObjectPool<PassengerController>(() => Object.Instantiate(catalog.passengerPrefab, root),
-                p => p.gameObject.SetActive(true), p => p.ResetView(), null, true, 40, 40);
+                p => p.gameObject.SetActive(true), p => p.ResetView(), p => Object.Destroy(p.gameObject), true, 40, 40);
             Effects = new ObjectPool<ParticleSystem>(() => Object.Instantiate(catalog.particlePrefab, root),
                 p => p.gameObject.SetActive(true), p =>
                 {
                     p.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
                     p.gameObject.SetActive(false);
-                }, null, true, 24, 24);
+                }, e => Object.Destroy(e.gameObject), true, 24, 24);
             Warm(Vehicles, vehicleCount);
             Warm(Passengers, 40);
             Warm(Effects, 24);

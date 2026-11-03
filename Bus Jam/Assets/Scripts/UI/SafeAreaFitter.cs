@@ -12,7 +12,7 @@ namespace BusJam
         private void Update()
         {
             if (_lastArea != Screen.safeArea || _lastSize != new Vector2Int(Screen.width, Screen.height)) Apply();
-        }
+        } 
         private void Apply()
         {
             if (Screen.width <= 0 || Screen.height <= 0) return;

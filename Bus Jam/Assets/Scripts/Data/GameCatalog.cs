@@ -6,8 +6,7 @@ namespace BusJam
     {
         public LevelDataSO[] levels;
         public VehicleArt[] vehicles;
-        public Sprite background, passenger, slot, exhaust, star, winRays;
-        public Sprite button, primaryButton, dialogFrame;
+        public Sprite background, passenger, exhaust;
         public Font font;
         public Material greenVehicleMaterial;
         public BusController busPrefab;

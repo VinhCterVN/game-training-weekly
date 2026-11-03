@@ -15,6 +15,7 @@ namespace BusJam
         public bool Won => Delivered == Phases.Length && PassengerIndex == Level.passengers.Count;
         public int Remaining => Level.passengers.Count - PassengerIndex;
 
+        // Initial Round States
         public RoundState(LevelDataSO level)
         {
             Level = level;
