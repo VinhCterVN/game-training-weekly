@@ -7,7 +7,6 @@ namespace BusJam
 {
     public sealed class CoinFlyEffect : MonoBehaviour
     {
-        // All ten icons are authored in the prefab. No runtime icon allocation.
         [SerializeField] private RectTransform[] _icons;
         private readonly Queue<RectTransform> _pool = new();
         private readonly List<Sequence> _flights = new();

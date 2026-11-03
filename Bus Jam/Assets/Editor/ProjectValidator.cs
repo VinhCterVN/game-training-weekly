@@ -14,6 +14,8 @@ public static class ProjectValidator
     {
         var root = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Resources/BusJamUI.prefab");
         Require(root != null, "UI prefab exists");
+        Require(root.GetComponent<GameUI>() != null, "UI prefab has a GameUI component on its root");
+        Require(Resources.Load<GameUI>("BusJamUI") != null, "UI prefab loads through the gameplay Resources path");
         var canvases = root.GetComponentsInChildren<Canvas>(true);
         Require(canvases.Select(c => c.sortingOrder).OrderBy(i => i).SequenceEqual(new[] {10,20,30}), "Canvas priorities");
         Require(root.GetComponentsInChildren<Text>(true).Length == 0, "No legacy UI Text");

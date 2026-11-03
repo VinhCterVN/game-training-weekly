@@ -27,6 +27,16 @@ public static class UIBuilder
     public static void Generate()
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+        // A stale script import can create a component in memory but save m_Script as null.
+        const string scriptPath = "Assets/Scripts/UI/GameUI.cs";
+        var script = AssetDatabase.LoadAssetAtPath<MonoScript>(scriptPath);
+        if (script != null && script.GetClass() != typeof(GameUI))
+        {
+            AssetDatabase.ImportAsset(scriptPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+            script = AssetDatabase.LoadAssetAtPath<MonoScript>(scriptPath);
+        }
+        if (script == null || script.GetClass() != typeof(GameUI))
+            throw new InvalidOperationException("GameUI.cs is not imported as BusJam.GameUI. Reimport the script before generating the UI prefab.");
         const string fontPath = "Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset";
         _font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(fontPath);
         if (_font == null) throw new InvalidOperationException("TMP essential font could not be imported.");
