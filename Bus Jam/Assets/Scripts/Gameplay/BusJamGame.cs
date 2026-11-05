@@ -18,7 +18,11 @@ namespace BusJam
         public int LevelIndex { get; private set; }
         public GameUI UI { get; private set; }
         public GamePools Pools { get; private set; }
+        public event System.Action<RoundFinishedResult> RoundFinished;
         private GameAudio _audioFx;
+        private RoundProgressObserver _roundProgress;
+        private RoundFeedbackObserver _roundFeedback;
+        private RoundResultPresenter _roundPresenter;
         private readonly List<BusController> _buses = new();
         private readonly List<PassengerController> _passengers = new();
         private readonly List<PassengerController> _seated = new();
@@ -71,6 +75,9 @@ namespace BusJam
                 point.z = 0;
                 Pools.Puff(point, new Color(1, .8f, .25f), 8);
             });
+            _roundProgress = new RoundProgressObserver(this);
+            _roundFeedback = new RoundFeedbackObserver(this, _audioFx, Pools);
+            _roundPresenter = new RoundResultPresenter(this, UI);
             FitCamera();
             int saved = Mathf.Clamp(PlayerPrefs.GetInt("BusJam.Level", 0), 0, catalog.levels.Length - 1);
             LoadLevel(saved);
@@ -373,23 +380,11 @@ namespace BusJam
 
         private void Finish(bool won)
         {
+            if (_roundOver) return;
             _roundOver = true;
-            _audioFx.Play(won ? Cue.Win : Cue.Lose);
-            HapticFeedback.Play(won ? HapticCue.Success : HapticCue.Warning);
-            if (won)
-            {
-                int next = Mathf.Min(LevelIndex + 1, catalog.levels.Length - 1);
-                PlayerPrefs.SetInt("BusJam.Level", next);
-                PlayerPrefs.Save();
-                for (int i = 0; i < 8; i++)
-                    Pools.Puff(new Vector3(-3.5f + i, 5, 0), GameCatalog.Tint((ColorID)(i % 4)), 22, true);
-                bool last = LevelIndex == catalog.levels.Length - 1;
-                UI.Show(last ? "ALL LEVELS COMPLETE" : "LEVEL COMPLETE", "+100", last ? "PLAY AGAIN" : "NEXT",
-                    () => UI.ClaimReward(() => LoadLevel(last ? 0 : LevelIndex + 1)));
-            }
-            else
-                UI.Show("TRY AGAIN", State.Deadlocked ? "No free bays" : "No moves left", "RETRY",
-                    () => LoadLevel(LevelIndex));
+            var result = new RoundFinishedResult(won, LevelIndex, catalog.levels.Length,
+                won ? null : State.Deadlocked ? "No free bays" : "No moves left");
+            RoundFinished?.Invoke(result);
         }
 
         private void StartPlaying()
@@ -438,6 +433,10 @@ namespace BusJam
 
         private void OnDestroy()
         {
+            _roundPresenter?.Dispose();
+            _roundFeedback?.Dispose();
+            _roundProgress?.Dispose();
+            RoundFinished = null;
             Time.timeScale = 1;
             if (UI != null) Destroy(UI.gameObject);
             if (gameCamera != null) gameCamera.transform.DOKill();

@@ -15,6 +15,9 @@ public static class GameplaySmokeTests
     private static double _deadline, _next;
     private static int _phase, _startCoins;
     private static bool _failed;
+    private static BusJamGame _observedGame;
+    private static int _roundFinishedCount;
+    private static RoundFinishedResult _roundResult;
 
     public static void Begin()
     {
@@ -76,6 +79,9 @@ public static class GameplaySmokeTests
                 case 7:
                     Require(!ui.ModalVisible && Time.timeScale == 1, "Cancel restart resumes");
                     game.LoadLevel(0);
+                    _observedGame = game;
+                    _roundFinishedCount = 0;
+                    game.RoundFinished += ObserveRoundFinished;
                     _startCoins = PlayerPrefs.GetInt("BusJam.Coins", 0);
                     _phase++; break;
                 case 8:
@@ -83,6 +89,15 @@ public static class GameplaySmokeTests
                     if (game.State.Won)
                     {
                         Require(ui.ModalVisible, "Win popup appears");
+                        Require(_roundFinishedCount == 1 && _roundResult.Won && _roundResult.LevelIndex == 0 &&
+                            _roundResult.NextLevelIndex == 1 && !_roundResult.IsLastLevel && _roundResult.FailureReason == null,
+                            "RoundFinished publishes one winning result snapshot");
+                        Require(PlayerPrefs.GetInt("BusJam.Level", -1) == 1, "Progress observer saves the next level");
+                        Require(PlayerPrefs.GetInt("BusJam.Coins", 0) == _startCoins, "Winning does not claim coins early");
+                        typeof(BusJamGame).GetMethod("Finish", System.Reflection.BindingFlags.Instance |
+                            System.Reflection.BindingFlags.NonPublic).Invoke(game, new object[] { true });
+                        Require(_roundFinishedCount == 1, "Finishing the same round twice does not notify twice");
+                        game.RoundFinished -= ObserveRoundFinished;
                         Click(ui, "_primary"); Click(ui, "_primary");
                         _phase++; _next = EditorApplication.timeSinceStartup + 2.5;
                         break;
@@ -94,8 +109,10 @@ public static class GameplaySmokeTests
                 case 9:
                     Require(game.LevelIndex == 1 && !ui.ModalVisible, "Claim advances to next level");
                     Require(PlayerPrefs.GetInt("BusJam.Coins", 0) == _startCoins + 100, "Exactly 100 coins, double claim ignored");
+                    Require(_roundResult.LevelIndex == 0 && _roundResult.NextLevelIndex == 1,
+                        "Result snapshot remains unchanged after loading another level");
                     Directory.CreateDirectory("Logs");
-                    File.WriteAllText("Logs/Week6-playchecks.txt", "PASS: Home -> Settings -> Home -> Gameplay -> Settings -> Gameplay -> Restart/Cancel -> Solve Level 1 -> Win -> Double Claim -> 10 coin arrivals -> Level 2; exactly +100 coins; no runtime errors.\n");
+                    File.WriteAllText("Logs/Week6-playchecks.txt", "PASS: Home -> Settings -> Home -> Gameplay -> Settings -> Gameplay -> Restart/Cancel -> Solve Level 1 -> RoundFinished once -> Progress saved -> Win -> Double Claim -> 10 coin arrivals -> Level 2; immutable result snapshot; exactly +100 coins; no runtime errors.\n");
                     Finish(0); break;
             }
         }
@@ -107,12 +124,19 @@ public static class GameplaySmokeTests
         Require(button.gameObject.activeInHierarchy && button.interactable, field + " is clickable");
         button.onClick.Invoke();
     }
+    private static void ObserveRoundFinished(RoundFinishedResult result)
+    {
+        _roundFinishedCount++;
+        _roundResult = result;
+    }
     private static void Require(bool value, string message)
     {
         if (!value) throw new Exception("Week 6 play check: " + message);
     }
     private static void Finish(int code)
     {
+        if (_observedGame != null) _observedGame.RoundFinished -= ObserveRoundFinished;
+        _observedGame = null;
         EditorApplication.update -= Tick;
         Application.logMessageReceived -= Log;
         SessionState.SetBool(_activeKey, false);
