@@ -15,6 +15,7 @@ public static class UIBuilder
     private static TMP_FontAsset _font;
     private static readonly Color _navy = new Color(.07f, .12f, .22f);
     private static readonly Color _blue = new Color(.16f, .45f, .86f);
+    private static readonly Color _green = new Color(0.0f, 1.0f, 0.0f);
     private static readonly Color _gold = new Color(1, .77f, .22f);
 
     [InitializeOnLoadMethod]
@@ -68,7 +69,7 @@ public static class UIBuilder
 
             var home = Popup("Home", popupCanvas, new Vector2(900, 700), out var homeCard);
             Label("Title", homeCard, "BUS JAM", new Vector2(0, 180), new Vector2(800, 140), 84);
-            var play = Button("Play", homeCard, "PLAY", new Vector2(0, -10), new Vector2(700, 120), _blue);
+            var play = Button("Play", homeCard, "PLAY", new Vector2(0, -10), new Vector2(700, 120), _green);
             var homeSettings = Button("Settings", homeCard, "SETTINGS", new Vector2(0, -170), new Vector2(700, 100), new Color(.18f, .25f, .36f));
 
             var result = Popup("Result", popupCanvas, new Vector2(900, 680), out var resultCard);

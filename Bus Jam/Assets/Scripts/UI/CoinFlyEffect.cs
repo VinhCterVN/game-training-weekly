@@ -44,7 +44,7 @@ namespace BusJam
                 {
                     icon.gameObject.SetActive(false);
                     _pool.Enqueue(icon);
-                    landed?.Invoke(10);
+                    landed?.Invoke(20);
                     if (--remaining != 0) return;
                     IsPlaying = false;
                     completed?.Invoke();

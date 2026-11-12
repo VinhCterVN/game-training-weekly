@@ -2,6 +2,7 @@ using System;
 
 namespace BusJam
 {
+    // Observer Class which shows Popup UI, triggered when the Game Round is Finished (Win/Lose)
     public sealed class RoundResultPresenter : IDisposable
     {
         private readonly BusJamGame _game;

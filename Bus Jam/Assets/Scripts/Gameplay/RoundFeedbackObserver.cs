@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace BusJam
 {
+    // Observer Class used for tactile Feedbacks (HapticFeedback), triggered when Game Round is Win or Lose (Finished)
     public sealed class RoundFeedbackObserver : IDisposable
     {
         private readonly BusJamGame _game;
