@@ -10,6 +10,8 @@ namespace BusJam
     {
         public GameCatalog catalog;
         public Camera gameCamera;
+        // [SerializeField]
+        // private GameUI _ui;
         public Transform[] parkingBays = new Transform[3];
         [Min(.02f)] public float selectionDelay = .15f;
         [Min(.02f)] public float boardingInterval = .07f;
@@ -17,6 +19,7 @@ namespace BusJam
         public bool IsBusy => _loading || _activeMotions > 0 || (State != null && State.BoardingTarget() >= 0);
         public int LevelIndex { get; private set; }
         public GameUI UI { get; private set; }
+        [SerializeField] private GameUI uiInScene;
         public GamePools Pools { get; private set; }
         public event System.Action<RoundFinishedResult> RoundFinished;
         private GameAudio _audioFx;
@@ -61,14 +64,22 @@ namespace BusJam
             Pools = new GamePools(catalog, _world, maxVehicles);
             _audioFx = gameObject.AddComponent<GameAudio>();
             _audioFx.Initialize();
-            var uiPrefab = Resources.Load<GameUI>("BusJamUI");
-            if (uiPrefab == null)
+            // var uiPrefab = Resources.Load<GameUI>("BusJamUI");
+            // if (uiPrefab == null)
+            // {
+            //     Debug.LogError("Bus Jam UI prefab is missing. Run Bus Jam > Tools > Generate UI Prefab.");
+            //     enabled = false;
+            //     return;
+            // }
+            // UI = Instantiate(uiPrefab);
+            if (uiInScene == null)
             {
-                Debug.LogError("Bus Jam UI prefab is missing. Run Bus Jam > Tools > Generate UI Prefab.");
+                Debug.LogError("Bus Jam UI is not assigned. Drag the scene's BusJamUI object into Ui In Scene.");
                 enabled = false;
                 return;
             }
-            UI = Instantiate(uiPrefab);
+
+            UI = uiInScene;
             UI.Initialize(StartPlaying, TogglePause, ConfirmRetry, ShowHome, CloseSettings, _audioFx, () =>
             {
                 Vector3 point = gameCamera.ScreenToWorldPoint(Input.mousePosition);
@@ -412,7 +423,6 @@ namespace BusJam
         {
             UI.CloseSettings(() =>
             {
-                // Home can remain underneath Settings.
                 _paused = UI.ModalVisible;
                 Time.timeScale = _paused ? 0 : 1;
             });
@@ -438,7 +448,7 @@ namespace BusJam
             _roundProgress?.Dispose();
             RoundFinished = null;
             Time.timeScale = 1;
-            if (UI != null) Destroy(UI.gameObject);
+            // if (UI != null) Destroy(UI.gameObject);
             if (gameCamera != null) gameCamera.transform.DOKill();
         }
     }
