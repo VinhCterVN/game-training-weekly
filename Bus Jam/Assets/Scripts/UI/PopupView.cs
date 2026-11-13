@@ -9,13 +9,15 @@ namespace BusJam
         [SerializeField] private CanvasGroup _group;
         [SerializeField] private CanvasGroup _backdrop;
         [SerializeField] private RectTransform _card;
+        [SerializeField] private RectTransform options = null;
         private Sequence _transition;
         public bool Visible { get; private set; }
-        public void Open()
+        public void Open(bool withOptions = false)
         {
             _transition?.Kill();
             Visible = true;
             gameObject.SetActive(true);
+            if (options != null) options.gameObject.SetActive(withOptions);
             _group.alpha = 1;
             _group.blocksRaycasts = _group.interactable = true;
             _card.localScale = Vector3.one * .5f;

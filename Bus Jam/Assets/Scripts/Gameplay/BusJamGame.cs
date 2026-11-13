@@ -71,16 +71,24 @@ namespace BusJam
             }
 
             UI = uiInScene;
-            UI.Initialize(StartPlaying, TogglePause, ConfirmRetry, () =>
-            {
-                CloseSettings();
-                ShowHome();
-            }, CloseSettings, CloseSettings, _audioFx, () =>
-            {
-                Vector3 point = gameCamera.ScreenToWorldPoint(Input.mousePosition);
-                point.z = 0;
-                Pools.Puff(point, new Color(1, .8f, .25f), 8);
-            });
+            UI.Initialize(
+                onPlay: StartPlaying,
+                onHomeSettings: OpenSettingsFromHome,
+                onSettings: () => TogglePause(),
+                retry: ConfirmRetry,
+                onHome: () =>
+                {
+                    CloseSettings();
+                    ShowHome();
+                },
+                onClose: CloseSettings,
+                gAudio: _audioFx,
+                clickVfx: () =>
+                {
+                    Vector3 point = gameCamera.ScreenToWorldPoint(Input.mousePosition);
+                    point.z = 0;
+                    Pools.Puff(point, new Color(1, .8f, .25f), 8);
+                });
             _roundProgress = new RoundProgressObserver(this);
             _roundFeedback = new RoundFeedbackObserver(this, _audioFx, Pools);
             _roundPresenter = new RoundResultPresenter(this, UI);
@@ -103,7 +111,7 @@ namespace BusJam
             }
 
             if (Screen.width != _width || Screen.height != _height) FitCamera();
-            if (Input.GetKeyDown(KeyCode.Escape)) TogglePause();
+            if (Input.GetKeyDown(KeyCode.Escape)) TogglePause(true);
             if (_loading || State == null || _roundOver || _paused || UI.ModalVisible) return;
             LaunchNextPassenger();
             if (!IsBusy)
@@ -406,12 +414,18 @@ namespace BusJam
             UI.ShowHome();
         }
 
-        public void TogglePause()
+        private void OpenSettingsFromHome()
         {
-            if (UI == null || _roundOver || (UI.ModalVisible && !_paused)) return;
+            _paused = true;
+            UI.ShowSettings(withOptions: false);
+        }
+
+        private void TogglePause(bool inGame = true)
+        {
+            if (_roundOver || (UI.ModalVisible && !_paused)) return;
             _paused = true;
             Time.timeScale = 0;
-            UI.ShowSettings();
+            UI.ShowSettings(withOptions: inGame);
         }
 
         private void CloseSettings()
@@ -426,6 +440,7 @@ namespace BusJam
         private void ConfirmRetry()
         {
             if (UI.ModalVisible) return;
+            CloseSettings();
             _paused = true;
             Time.timeScale = 0;
             UI.Show("RESTART?", null, "RESTART", () => LoadLevel(LevelIndex), "CANCEL", () =>

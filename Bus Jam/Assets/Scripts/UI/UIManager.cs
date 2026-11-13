@@ -13,7 +13,7 @@ namespace BusJam
         public void CloseHome(Action completed) => _home.Close(completed);
         public void ShowResult() => _result.Open();
         public void CloseResult(Action completed = null) => _result.Close(completed);
-        public void ShowSettings() => _settings.Open();
+        public void ShowSettings(bool withOptions = false) => _settings.Open(withOptions);
         public void CloseSettings(Action completed) => _settings.Close(completed);
     }
 }
