@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -5,23 +6,29 @@ namespace BusJam
 {
     public sealed class SettingsController : MonoBehaviour
     {
-        [SerializeField] private Toggle _sound;
-        [SerializeField] private Toggle _music;
-        [SerializeField] private Toggle _haptic;
+        [SerializeField] private Toggle sound;
+        [SerializeField] private Toggle music;
+        [SerializeField] private Toggle haptic;
+
+        private void Start()
+        {
+            Debug.Log("Initialized SettingsController");
+        }
+
         private void OnEnable()
         {
-            _sound.SetIsOnWithoutNotify(SettingsManager.IsSoundOn);
-            _music.SetIsOnWithoutNotify(SettingsManager.IsMusicOn);
-            _haptic.SetIsOnWithoutNotify(SettingsManager.IsHapticOn);
-            _sound.onValueChanged.AddListener(Sound);
-            _music.onValueChanged.AddListener(Music);
-            _haptic.onValueChanged.AddListener(Haptic);
+            sound.SetIsOnWithoutNotify(SettingsManager.IsSoundOn);
+            music.SetIsOnWithoutNotify(SettingsManager.IsMusicOn);
+            haptic.SetIsOnWithoutNotify(SettingsManager.IsHapticOn);
+            sound.onValueChanged.AddListener(Sound);
+            music.onValueChanged.AddListener(Music);
+            haptic.onValueChanged.AddListener(Haptic);
         }
         private void OnDisable()
         {
-            _sound.onValueChanged.RemoveListener(Sound);
-            _music.onValueChanged.RemoveListener(Music);
-            _haptic.onValueChanged.RemoveListener(Haptic);
+            sound.onValueChanged.RemoveListener(Sound);
+            music.onValueChanged.RemoveListener(Music);
+            haptic.onValueChanged.RemoveListener(Haptic);
         }
         private void Sound(bool value) { SettingsManager.SetSound(value); Feedback(); }
         private void Music(bool value) { SettingsManager.SetMusic(value); Feedback(); }

@@ -14,6 +14,12 @@ namespace BusJam
         [SerializeField] private TMP_Text title, body, primaryLabel, secondaryLabel;
         [SerializeField] private Button play, homeSettings, settings, restart, home, closePopup;
         [SerializeField] private Button primary, secondary, closeSettings;
+        // [SerializeField] private Button toggleAudio, toggleMusic, toggleHaptic;
+
+        [Header("Layout Settings")]
+        [SerializeField] private float primaryYWithSecondary = -55f;
+        [SerializeField] private float primaryYAlone = -120f;
+
         private Action _clickVfx;
         private Action _primaryAction, _secondaryAction;
         private GameAudio _audio;
@@ -92,7 +98,7 @@ namespace BusJam
             secondaryLabel.text = second ?? "";
             bool hasSecond = !string.IsNullOrEmpty(second);
             secondary.gameObject.SetActive(hasSecond);
-            ((RectTransform)primary.transform).anchoredPosition = new Vector2(0, hasSecond ? -55 : -120);
+            ((RectTransform)primary.transform).anchoredPosition = new Vector2(0, hasSecond ? primaryYWithSecondary : primaryYAlone);
             _primaryAction = onPrimary;
             _secondaryAction = onSecondary;
             manager.ShowResult();

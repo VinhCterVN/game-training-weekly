@@ -8,12 +8,71 @@ namespace BusJam
 {
     public class BusJamGame : MonoBehaviour
     {
+        [Header("Configuration & References")]
         [SerializeField] private GameCatalog catalog;
         [SerializeField] private Camera gameCamera;
         [SerializeField] private GameUI uiInScene;
         [SerializeField] private Transform[] parkingBays = new Transform[3];
+
+        [Header("Performance & Systems")]
+        [SerializeField] private int targetFrameRate = 60;
+        [SerializeField] private int tweenCapacity = 400;
+        [SerializeField] private int sequenceCapacity = 100;
+
+        [Header("Gameplay Timing")]
         [Min(.02f)] public float selectionDelay = .15f;
         [Min(.02f)] public float boardingInterval = .07f;
+        [SerializeField] private float exhaustInterval = 0.13f;
+
+        [Header("Camera & Viewport")]
+        [SerializeField] private float cameraOrthographicSize = 9.6f;
+        [SerializeField] private Vector2 referenceResolution = new Vector2(1080f, 1920f);
+        [SerializeField] private float shakeDuration = 0.22f;
+        [SerializeField] private int shakeVibrato = 12;
+
+        [Header("Grid & Board Layout")]
+        [SerializeField] private float maxGridWidth = 8.5f;
+        [SerializeField] private float maxGridHeight = 7.2f;
+        [SerializeField] private float gridCenterY = -2.75f;
+        [SerializeField] private float baySpacing = 2.15f;
+        [SerializeField] private float bayPosY = 3.85f;
+
+        [Header("Passenger Queue")]
+        [SerializeField] private int visiblePassengers = 20;
+        [SerializeField] private float queueFrontStartX = -1.65f;
+        [SerializeField] private float queueFrontSpacing = 0.36f;
+        [SerializeField] private float queueFrontY = 5.8f;
+        [SerializeField] private float queueTurnX = 2.31f;
+        [SerializeField] private float queueTurnSpacingY = 0.25f;
+        [SerializeField] private int queueTurnThreshold = 12;
+        [SerializeField] private float passengerQueueMoveDuration = 0.15f;
+        [SerializeField] private float passengerJumpPower = 0.35f;
+        [SerializeField] private float passengerJumpDuration = 0.22f;
+        [SerializeField] private float passengerSeatedScale = 0.6f;
+
+        [Header("Movement & Feedback")]
+        [SerializeField] private float busExitDuration = 0.45f;
+        [SerializeField] private float busPerimeterDuration = 0.25f;
+        [SerializeField] private float busAscentDuration = 0.35f;
+        [SerializeField] private float busAlignDuration = 0.25f;
+        [SerializeField] private float busParkDuration = 0.25f;
+        [SerializeField] private float departShakeStrength = 0.06f;
+        [SerializeField] private float departExitX = 7.5f;
+        [SerializeField] private float departDuration = 0.5f;
+        [SerializeField] private float bumpShakeStrength = 0.035f;
+        [SerializeField] private float bumpPunchDistance = 0.13f;
+        [SerializeField] private float bumpPunchDuration = 0.3f;
+
+        [Header("Visual Effects & Particle Cues")]
+        [SerializeField] private Color exhaustPuffColor = new Color(0.94f, 0.96f, 1f, 0.6f);
+        [SerializeField] private int exhaustPuffCount = 3;
+        [SerializeField] private Color bumpPuffColor = new Color(1f, 0.8f, 0.25f);
+        [SerializeField] private int bumpPuffCount = 6;
+        [SerializeField] private Color departPuffColor = new Color(0.94f, 0.96f, 1f, 0.85f);
+        [SerializeField] private int departPuffCount = 14;
+        [SerializeField] private Color clickPuffColor = new Color(1f, 0.8f, 0.25f);
+        [SerializeField] private int clickPuffCount = 8;
+
         private RoundState State { get; set; }
         private bool IsBusy => _loading || _activeMotions > 0 || (State != null && State.BoardingTarget() >= 0);
         private int LevelIndex { get; set; }
@@ -35,13 +94,12 @@ namespace BusJam
         private int _activeMotions;
         private int[] _boardingInFlight, _boardedCounts;
         private Transform _world;
-        private const int VisiblePassengers = 20;
 
         private void Start()
         {
-            Application.targetFrameRate = 60;
+            Application.targetFrameRate = targetFrameRate;
             Screen.orientation = ScreenOrientation.Portrait;
-            DOTween.SetTweensCapacity(400, 100);
+            DOTween.SetTweensCapacity(tweenCapacity, sequenceCapacity);
             if (catalog == null)
             {
                 Debug.LogError("Bus Jam catalog is missing. Run Bus Jam > Setup Project.");
@@ -87,7 +145,7 @@ namespace BusJam
                 {
                     Vector3 point = gameCamera.ScreenToWorldPoint(Input.mousePosition);
                     point.z = 0;
-                    Pools.Puff(point, new Color(1, .8f, .25f), 8);
+                    Pools.Puff(point, clickPuffColor, clickPuffCount);
                 });
             _roundProgress = new RoundProgressObserver(this);
             _roundFeedback = new RoundFeedbackObserver(this, _audioFx, Pools);
@@ -104,10 +162,10 @@ namespace BusJam
             Pools.Tick();
             if (State != null && Time.time >= _nextExhaust)
             {
-                _nextExhaust = Time.time + .13f;
+                _nextExhaust = Time.time + exhaustInterval;
                 for (int i = 0; i < _buses.Count; i++)
                     if (State.Phases[i] == VehiclePhase.Arriving || State.Phases[i] == VehiclePhase.Departing)
-                        Pools.Puff(_buses[i].tail.position, new Color(.94f, .96f, 1, .6f), 3);
+                        Pools.Puff(_buses[i].tail.position, exhaustPuffColor, exhaustPuffCount);
             }
 
             if (Screen.width != _width || Screen.height != _height) FitCamera();
@@ -144,11 +202,11 @@ namespace BusJam
         {
             _width = Screen.width;
             _height = Screen.height;
-            float aspect = _width / (float)_height, target = 1080f / 1920;
+            float aspect = _width / (float)_height, target = referenceResolution.x / referenceResolution.y;
             gameCamera.rect = aspect > target
                 ? new Rect((1 - target / aspect) * .5f, 0, target / aspect, 1)
                 : new Rect(0, (1 - aspect / target) * .5f, 1, aspect / target);
-            gameCamera.orthographicSize = 9.6f;
+            gameCamera.orthographicSize = cameraOrthographicSize;
         }
 
         public void LoadLevel(int index)
@@ -191,8 +249,8 @@ namespace BusJam
             _boardingInFlight = new int[level.vehicles.Count];
             _boardedCounts = new int[level.vehicles.Count];
             _roundOver = false;
-            _cell = Mathf.Min(8.5f / level.columns, 7.2f / level.rows);
-            _origin = new Vector2(-level.columns * _cell * .5f, -2.75f - level.rows * _cell * .5f);
+            _cell = Mathf.Min(maxGridWidth / level.columns, maxGridHeight / level.rows);
+            _origin = new Vector2(-level.columns * _cell * .5f, gridCenterY - level.rows * _cell * .5f);
             for (int i = 0; i < level.vehicles.Count; i++)
             {
                 var v = level.vehicles[i];
@@ -214,10 +272,9 @@ namespace BusJam
             _loading = false;
         }
 
-        public DispatchResult TryDispatch(int id)
+        private void TryDispatch(int id)
         {
-            if (_loading || State == null || _paused || _roundOver || UI.ModalVisible || Time.time < _nextSelection)
-                return DispatchResult.Unavailable;
+            if (_loading || State == null || _paused || _roundOver || UI.ModalVisible || Time.time < _nextSelection) return;
             var result = State.Dispatch(id);
             if (result == DispatchResult.Accepted)
             {
@@ -234,12 +291,10 @@ namespace BusJam
                 _buses[id].transform.localScale = Vector3.one;
                 _buses[id].transform.position =
                     _origin + new Vector2(v.x + v.Width * .5f, v.y + v.Height * .5f) * _cell;
-                _buses[id].transform.DOPunchPosition((Vector3)(Vector2)v.Direction * .13f, .3f, 5, .5f);
-                Shake(.035f);
-                Pools.Puff(_buses[id].head.position, new Color(1, .8f, .25f), 6);
+                _buses[id].transform.DOPunchPosition((Vector3)(Vector2)v.Direction * bumpPunchDistance, bumpPunchDuration, 5, .5f);
+                Shake(bumpShakeStrength);
+                Pools.Puff(_buses[id].head.position, bumpPuffColor, bumpPuffCount);
             }
-
-            return result;
         }
 
         private IEnumerator DispatchFlow(int id)
@@ -264,29 +319,29 @@ namespace BusJam
             else if (v.facing == Facing.Down) exit.y = bottom;
             else if (v.facing == Facing.Left) exit.x = left;
             else exit.x = right;
-            Pools.Puff(bus.tail.position, new Color(.94f, .96f, 1, .7f));
-            yield return bus.transform.DOMove(exit, .45f).SetEase(Ease.InQuad).WaitForCompletion();
+            Pools.Puff(bus.tail.position, exhaustPuffColor, exhaustPuffCount);
+            yield return bus.transform.DOMove(exit, busExitDuration).SetEase(Ease.InQuad).WaitForCompletion();
             // Travel on the outer perimeter, never diagonally across parked vehicles.
             float side = v.facing == Facing.Left ? left : right;
             if (v.facing == Facing.Down)
             {
                 bus.SetArt(side < 0 ? Facing.Left : Facing.Right, false);
-                yield return bus.transform.DOMove(new Vector3(side, bottom), .25f).SetEase(Ease.Linear)
+                yield return bus.transform.DOMove(new Vector3(side, bottom), busPerimeterDuration).SetEase(Ease.Linear)
                     .WaitForCompletion();
             }
 
             if (v.facing != Facing.Up)
             {
                 bus.SetArt(Facing.Up, false);
-                yield return bus.transform.DOMove(new Vector3(v.facing == Facing.Down ? side : exit.x, top), .35f)
+                yield return bus.transform.DOMove(new Vector3(v.facing == Facing.Down ? side : exit.x, top), busAscentDuration)
                     .SetEase(Ease.Linear).WaitForCompletion();
             }
 
             Vector3 bay = BayPosition(State.BayOf(id), State.Bays.Length);
             bus.SetArt(bus.transform.position.x < bay.x ? Facing.Right : Facing.Left, false);
-            yield return bus.transform.DOMove(new Vector3(bay.x, top), .25f).SetEase(Ease.Linear).WaitForCompletion();
+            yield return bus.transform.DOMove(new Vector3(bay.x, top), busAlignDuration).SetEase(Ease.Linear).WaitForCompletion();
             bus.SetArt(Facing.Up, false);
-            yield return bus.transform.DOMove(bay, .25f).SetEase(Ease.OutSine).WaitForCompletion();
+            yield return bus.transform.DOMove(bay, busParkDuration).SetEase(Ease.OutSine).WaitForCompletion();
             bus.Park();
             State.Arrive(id);
             UI.Refresh(LevelIndex, State);
@@ -318,10 +373,10 @@ namespace BusJam
             _activeMotions++;
             var vehicle = _buses[target];
             _audioFx.Play(Cue.Step);
-            yield return passenger.transform.DOJump(vehicle.seats[seat].position, .35f, 1, .22f)
+            yield return passenger.transform.DOJump(vehicle.seats[seat].position, passengerJumpPower, 1, passengerJumpDuration)
                 .SetEase(Ease.OutQuad).WaitForCompletion();
             passenger.transform.SetParent(vehicle.transform, true);
-            passenger.transform.localScale = Vector3.one * .6f;
+            passenger.transform.localScale = Vector3.one * passengerSeatedScale;
             vehicle.SetCount(++_boardedCounts[target]);
             _boardingInFlight[target]--;
             _activeMotions--;
@@ -347,10 +402,10 @@ namespace BusJam
             _audioFx.Play(Cue.Honk);
             HapticFeedback.Play(HapticCue.Success);
             _audioFx.Play(Cue.Engine);
-            Shake(.06f);
+            Shake(departShakeStrength);
             vehicle.transform.DOPunchScale(new Vector3(.12f, -.06f, 0), .3f, 1);
-            Pools.Puff(vehicle.tail.position, new Color(.94f, .96f, 1, .85f), 14);
-            yield return vehicle.transform.DOMoveX(7.5f, .5f).SetEase(Ease.InCubic).WaitForCompletion();
+            Pools.Puff(vehicle.tail.position, departPuffColor, departPuffCount);
+            yield return vehicle.transform.DOMoveX(departExitX, departDuration).SetEase(Ease.InCubic).WaitForCompletion();
             State.Depart(target);
             Pools.Vehicles.Release(vehicle);
             UI.Refresh(LevelIndex, State);
@@ -359,7 +414,7 @@ namespace BusJam
 
         private void RefreshPassengers(bool animate)
         {
-            int desired = Mathf.Min(VisiblePassengers, State.Remaining);
+            int desired = Mathf.Min(visiblePassengers, State.Remaining);
             while (_passengers.Count < desired) _passengers.Add(Pools.Passengers.Get());
             for (int i = 0; i < _passengers.Count; i++)
             {
@@ -371,25 +426,25 @@ namespace BusJam
                 else
                 {
                     p.transform.DOKill();
-                    p.transform.DOMove(end, .15f).SetEase(Ease.OutSine);
+                    p.transform.DOMove(end, passengerQueueMoveDuration).SetEase(Ease.OutSine);
                 }
 
                 p.body.sortingOrder = 50 - i;
             }
         }
 
-        private static Vector3 PassengerPosition(int i) => i < 12
-            ? new Vector3(-1.65f + i * .36f, 5.8f, 0)
-            : new Vector3(2.31f, 5.8f + (i - 11) * .25f, 0);
+        private Vector3 PassengerPosition(int i) => i < queueTurnThreshold
+            ? new Vector3(queueFrontStartX + i * queueFrontSpacing, queueFrontY, 0)
+            : new Vector3(queueTurnX, queueFrontY + (i - (queueTurnThreshold - 1)) * queueTurnSpacingY, 0);
 
-        private static Vector3 BayPosition(int slot, int count) =>
-            new Vector3((slot - (count - 1) * .5f) * 2.15f, 3.85f, 0);
+        private Vector3 BayPosition(int slot, int count) =>
+            new Vector3((slot - (count - 1) * .5f) * baySpacing, bayPosY, 0);
 
         private void Shake(float strength)
         {
             gameCamera.transform.DOKill();
             gameCamera.transform.position = new Vector3(0, 0, -10);
-            gameCamera.transform.DOShakePosition(.22f, strength, 12);
+            gameCamera.transform.DOShakePosition(shakeDuration, strength, shakeVibrato);
         }
 
         private void Finish(bool won)
@@ -439,16 +494,8 @@ namespace BusJam
 
         private void ConfirmRetry()
         {
-            if (UI.ModalVisible) return;
             CloseSettings();
-            _paused = true;
-            Time.timeScale = 0;
-            UI.Show("RESTART?", null, "RESTART", () => LoadLevel(LevelIndex), "CANCEL", () =>
-            {
-                _paused = false;
-                Time.timeScale = 1;
-                UI.Hide();
-            });
+            LoadLevel(LevelIndex);
         }
 
         private void OnDestroy()

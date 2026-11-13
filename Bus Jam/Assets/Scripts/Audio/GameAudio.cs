@@ -21,7 +21,6 @@ namespace BusJam
             _bgmSource.playOnAwake = false;
             _bgmSource.loop = true;
             _bgmSource.volume = this.config != null ? this.config.BgmVolume : .09f;
-            _bgmSource.clip = (this.config != null && this.config.Bgm != null) ? this.config.Bgm : MakeMusic();
 
             _clips = new AudioClip[8];
             _isProceduralClip = new bool[8];
@@ -70,22 +69,6 @@ namespace BusJam
             _bgmSource.mute = !SettingsManager.IsMusicOn;
             if (SettingsManager.IsMusicOn && !_bgmSource.isPlaying) _bgmSource.Play();
             else if (!SettingsManager.IsMusicOn) _bgmSource.Pause();
-        }
-
-        private static AudioClip MakeMusic()
-        {
-            const int rate = 22050;
-            var data = new float[rate * 8];
-            float[] notes = { 261.63f, 329.63f, 392f, 329.63f, 293.66f, 349.23f, 440f, 392f };
-            for (int i = 0; i < data.Length; i++)
-            {
-                float t = i / (float)rate;
-                float beat = t % 1;
-                data[i] = Mathf.Sin(t * notes[(int)t] * Mathf.PI * 2) * Mathf.Sin(beat * Mathf.PI) * .4f;
-            }
-            var clip = AudioClip.Create("Bus Jam - calm loop", data.Length, 1, rate, false);
-            clip.SetData(data, 0);
-            return clip;
         }
 
         private void OnDestroy()

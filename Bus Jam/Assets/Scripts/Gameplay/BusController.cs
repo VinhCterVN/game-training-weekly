@@ -13,8 +13,19 @@ namespace BusJam
         public int Id { get; private set; }
         public VehiclePlacement Placement { get; private set; }
         public Facing Direction { get; private set; }
+        [Header("Parking Settings")]
         [SerializeField] public float parkCarCell = 0.85f;
         [SerializeField] public float parkBusCell = 0.68f;
+
+        [Header("Geometry & Layout")]
+        [SerializeField] private float spriteMarginScale = 0.9f;
+        [SerializeField] private float hitboxScale = 0.94f;
+        [SerializeField] private float headOffsetFactor = 0.45f;
+        [SerializeField] private float seatXOffset = 0.19f;
+        [SerializeField] private float seatBaseY = 0.25f;
+        [SerializeField] private float seatRowSpacing = 0.43f;
+        [SerializeField] private float countYOffset = 0.14f;
+
         private GameCatalog _catalog;
         private float _cell;
         private Material _defaultMaterial;
@@ -45,26 +56,24 @@ namespace BusJam
             float height = horizontal ? _cell : Placement.Length * _cell;
             // Sprite vertices exclude transparent margins in the supplied illustrations.
             var bounds = VisibleBounds(body.sprite);
-            var scale = new Vector3(width * .9f / bounds.size.x, height * .9f / bounds.size.y, 1);
+            var scale = new Vector3(width * spriteMarginScale / bounds.size.x, height * spriteMarginScale / bounds.size.y, 1);
             body.transform.localScale = scale;
             body.transform.localPosition = -Vector3.Scale(bounds.center, scale);
-            hitbox.size = new Vector2(width * .94f, height * .94f);
+            hitbox.size = new Vector2(width * hitboxScale, height * hitboxScale);
             var direction = facing == Facing.Up ? Vector3.up :
                 facing == Facing.Down ? Vector3.down :
                 facing == Facing.Left ? Vector3.left : Vector3.right;
-            head.localPosition = direction * Placement.Length * _cell * .45f;
+            head.localPosition = direction * Placement.Length * _cell * headOffsetFactor;
             tail.localPosition = -head.localPosition;
             for (int i = 0; i < seats.Length; i++)
                 seats[i].localPosition =
-                    new Vector3((i % 2 == 0 ? -.19f : .19f) * _cell, (.25f + (i / 2) * .43f) * _cell, 0);
-            count.transform.localPosition = new Vector3(0, -height * .5f - .14f, -.1f);
+                    new Vector3((i % 2 == 0 ? -seatXOffset : seatXOffset) * _cell, (seatBaseY + (i / 2) * seatRowSpacing) * _cell, 0);
+            count.transform.localPosition = new Vector3(0, -height * .5f - countYOffset, -.1f);
         }
 
         public void Park()
         {
-            float carSize = parkCarCell > 0.1f ? parkCarCell : 0.85f;
-            float busSize = parkBusCell > 0.1f ? parkBusCell : 0.68f;
-            _cell = Placement.kind == VehicleKind.Car ? carSize : busSize;
+            _cell = Placement.kind == VehicleKind.Car ? parkCarCell : parkBusCell;
             SetArt(Facing.Up, true);
             count.gameObject.SetActive(true);
             SetCount(0);
