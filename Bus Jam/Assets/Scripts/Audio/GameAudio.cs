@@ -4,21 +4,43 @@ namespace BusJam
 {
     public class GameAudio : MonoBehaviour
     {
+        [SerializeField] private AudioConfig config;
         private AudioSource _sfxSource, _bgmSource;
         private AudioClip[] _clips;
+        private bool[] _isProceduralClip;
         public bool Muted => !SettingsManager.IsSoundOn;
 
-        public void Initialize()
+        public void Initialize(AudioConfig config = null)
         {
+            if (config != null) this.config = config;
+            if (this.config == null) this.config = Resources.Load<AudioConfig>("AudioConfig");
+
             _sfxSource = gameObject.AddComponent<AudioSource>();
             _sfxSource.playOnAwake = false;
             _bgmSource = gameObject.AddComponent<AudioSource>();
             _bgmSource.playOnAwake = false;
             _bgmSource.loop = true;
-            _bgmSource.volume = .09f;
-            _bgmSource.clip = MakeMusic();
+            _bgmSource.volume = this.config != null ? this.config.BgmVolume : .09f;
+            _bgmSource.clip = (this.config != null && this.config.Bgm != null) ? this.config.Bgm : MakeMusic();
+
             _clips = new AudioClip[8];
-            for (int i = 0; i < _clips.Length; i++) _clips[i] = Synthesize((Cue)i);
+            _isProceduralClip = new bool[8];
+            for (int i = 0; i < _clips.Length; i++)
+            {
+                var cue = (Cue)i;
+                var clip = this.config != null ? this.config.GetClip(cue) : null;
+                if (clip != null)
+                {
+                    _clips[i] = clip;
+                    _isProceduralClip[i] = false;
+                }
+                else
+                {
+                    _clips[i] = Synthesize(cue);
+                    _isProceduralClip[i] = true;
+                }
+            }
+
             SettingsManager.Changed += ApplySettings;
             ApplySettings();
         }
@@ -30,7 +52,12 @@ namespace BusJam
 
         public void Play(Cue cue)
         {
-            if (_sfxSource != null && SettingsManager.IsSoundOn)
+            if (config != null && _sfxSource != null)
+            {
+                config.Play(cue, _sfxSource);
+                if (SettingsManager.IsMusicOn && !_bgmSource.isPlaying) _bgmSource.Play();
+            }
+            else if (_sfxSource != null && SettingsManager.IsSoundOn)
             {
                 _sfxSource.PlayOneShot(_clips[(int)cue], .36f);
                 if (SettingsManager.IsMusicOn && !_bgmSource.isPlaying) _bgmSource.Play();
@@ -64,8 +91,20 @@ namespace BusJam
         private void OnDestroy()
         {
             SettingsManager.Changed -= ApplySettings;
-            if (_clips != null) foreach (var clip in _clips) if (clip != null) Destroy(clip);
-            if (_bgmSource != null && _bgmSource.clip != null) Destroy(_bgmSource.clip);
+            if (_clips != null)
+            {
+                for (int i = 0; i < _clips.Length; i++)
+                {
+                    if (_isProceduralClip != null && _isProceduralClip[i] && _clips[i] != null)
+                    {
+                        Destroy(_clips[i]);
+                    }
+                }
+            }
+            if (_bgmSource != null && _bgmSource.clip != null && (config == null || _bgmSource.clip != config.Bgm))
+            {
+                Destroy(_bgmSource.clip);
+            }
         }
 
         // Original lightweight synthesized cues, allocated once during startup.

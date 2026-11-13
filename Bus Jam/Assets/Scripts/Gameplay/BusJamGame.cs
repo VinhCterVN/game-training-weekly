@@ -8,19 +8,17 @@ namespace BusJam
 {
     public class BusJamGame : MonoBehaviour
     {
-        public GameCatalog catalog;
-        public Camera gameCamera;
-        // [SerializeField]
-        // private GameUI _ui;
-        public Transform[] parkingBays = new Transform[3];
+        [SerializeField] private GameCatalog catalog;
+        [SerializeField] private Camera gameCamera;
+        [SerializeField] private GameUI uiInScene;
+        [SerializeField] private Transform[] parkingBays = new Transform[3];
         [Min(.02f)] public float selectionDelay = .15f;
         [Min(.02f)] public float boardingInterval = .07f;
-        public RoundState State { get; private set; }
-        public bool IsBusy => _loading || _activeMotions > 0 || (State != null && State.BoardingTarget() >= 0);
-        public int LevelIndex { get; private set; }
-        public GameUI UI { get; private set; }
-        [SerializeField] private GameUI uiInScene;
-        public GamePools Pools { get; private set; }
+        private RoundState State { get; set; }
+        private bool IsBusy => _loading || _activeMotions > 0 || (State != null && State.BoardingTarget() >= 0);
+        private int LevelIndex { get; set; }
+        private GameUI UI { get; set; }
+        private GamePools Pools { get; set; }
         public event System.Action<RoundFinishedResult> RoundFinished;
         private GameAudio _audioFx;
         private RoundProgressObserver _roundProgress;
@@ -37,7 +35,7 @@ namespace BusJam
         private int _activeMotions;
         private int[] _boardingInFlight, _boardedCounts;
         private Transform _world;
-        private const int _visiblePassengers = 20;
+        private const int VisiblePassengers = 20;
 
         private void Start()
         {
@@ -50,8 +48,7 @@ namespace BusJam
                 return;
             }
 
-            if (parkingBays == null || parkingBays.Length != 3 ||
-                System.Array.Exists(parkingBays, bay => bay == null))
+            if (parkingBays == null || parkingBays.Length != 3 || System.Array.Exists(parkingBays, bay => bay == null))
             {
                 Debug.LogError("Bus Jam parking scenery is missing. Run Bus Jam > Setup Project.");
                 return;
@@ -64,14 +61,8 @@ namespace BusJam
             Pools = new GamePools(catalog, _world, maxVehicles);
             _audioFx = gameObject.AddComponent<GameAudio>();
             _audioFx.Initialize();
-            // var uiPrefab = Resources.Load<GameUI>("BusJamUI");
-            // if (uiPrefab == null)
-            // {
-            //     Debug.LogError("Bus Jam UI prefab is missing. Run Bus Jam > Tools > Generate UI Prefab.");
-            //     enabled = false;
-            //     return;
-            // }
-            // UI = Instantiate(uiPrefab);
+
+            // Validate if uiInScene is null
             if (uiInScene == null)
             {
                 Debug.LogError("Bus Jam UI is not assigned. Drag the scene's BusJamUI object into Ui In Scene.");
@@ -80,7 +71,11 @@ namespace BusJam
             }
 
             UI = uiInScene;
-            UI.Initialize(StartPlaying, TogglePause, ConfirmRetry, ShowHome, CloseSettings, _audioFx, () =>
+            UI.Initialize(StartPlaying, TogglePause, ConfirmRetry, () =>
+            {
+                CloseSettings();
+                ShowHome();
+            }, CloseSettings, CloseSettings, _audioFx, () =>
             {
                 Vector3 point = gameCamera.ScreenToWorldPoint(Input.mousePosition);
                 point.z = 0;
@@ -356,7 +351,7 @@ namespace BusJam
 
         private void RefreshPassengers(bool animate)
         {
-            int desired = Mathf.Min(_visiblePassengers, State.Remaining);
+            int desired = Mathf.Min(VisiblePassengers, State.Remaining);
             while (_passengers.Count < desired) _passengers.Add(Pools.Passengers.Get());
             for (int i = 0; i < _passengers.Count; i++)
             {
@@ -386,7 +381,7 @@ namespace BusJam
         {
             gameCamera.transform.DOKill();
             gameCamera.transform.position = new Vector3(0, 0, -10);
-            gameCamera.transform.DOShakePosition(.22f, strength, 12, 90, false, true);
+            gameCamera.transform.DOShakePosition(.22f, strength, 12);
         }
 
         private void Finish(bool won)

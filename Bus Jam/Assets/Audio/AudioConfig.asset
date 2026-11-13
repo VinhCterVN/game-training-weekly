@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 087cd4311b2402a4e935a509db7efb81, type: 3}
+  m_Name: AudioConfig
+  m_EditorClassIdentifier:
+  _tap: {fileID: 8300000, guid: 8c9fce61a74dc8c43a7f24483ad5b1d2, type: 3}
+  _honk: {fileID: 8300000, guid: 37ada28c1cb24574ba3829cb34dc8125, type: 3}
+  _engine: {fileID: 8300000, guid: 45625949e0421ef48ac5f1be7d4d50d7, type: 3}
+  _step: {fileID: 8300000, guid: c1f67c236ac82764e99f0f27c9aae548, type: 3}
+  _bump: {fileID: 8300000, guid: e66c3523ee52dd04792334210c2e754d, type: 3}
+  _win: {fileID: 8300000, guid: 5dec2ac45ff5e8a47818084c5adb3909, type: 3}
+  _lose: {fileID: 8300000, guid: 7324d2a01d446f640a9b3bfd61227a49, type: 3}
+  _coin: {fileID: 8300000, guid: 45bb2bbe0adfaf54eaabe5668f505e52, type: 3}
+  _bgm: {fileID: 8300000, guid: 611899ffa383350f1105f219a95462da, type: 3}
+  _sfxVolume: 0.36
+  _bgmVolume: 0.09

@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 63478bc14d99e354c9d5769483705312
+guid: ece083f218fb0c44e8f0b9d2bd761112
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -43,7 +43,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -108,7 +108,112 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: popup 1_0
+      rect:
+        serializedVersion: 2
+        x: 46
+        y: 1328
+        width: 1123
+        height: 860
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1ec486f38d1a4a743b34f9350586894e
+      internalID: 681108938
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: popup 1_1
+      rect:
+        serializedVersion: 2
+        x: 187
+        y: 913
+        width: 841
+        height: 269
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0181e4388ff7cdb478ac120fae2c3b0b
+      internalID: 1499303465
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: popup 1_2
+      rect:
+        serializedVersion: 2
+        x: 496
+        y: 532
+        width: 242
+        height: 241
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 75da8d2cd3de8784abdb38984090e36c
+      internalID: -543884784
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: popup 1_3
+      rect:
+        serializedVersion: 2
+        x: 151
+        y: 67
+        width: 344
+        height: 342
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1caf5631ffc76c446b3d5a4f1377c63c
+      internalID: 1126005437
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: popup 1_4
+      rect:
+        serializedVersion: 2
+        x: 720
+        y: 67
+        width: 343
+        height: 342
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bca7230f21c8a8c48986bf7d04add5dc
+      internalID: -1357077651
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     physicsShape: []
     bones: []
@@ -119,7 +224,12 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      popup 1_0: 681108938
+      popup 1_1: 1499303465
+      popup 1_2: -543884784
+      popup 1_3: 1126005437
+      popup 1_4: -1357077651
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
