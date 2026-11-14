@@ -8,10 +8,13 @@ namespace BusJam
         public int NextLevelIndex { get; }
         public bool IsLastLevel { get; }
         public string FailureReason { get; }
+        // Coins already credited by the game; the UI only animates them.
+        public int Reward { get; }
 
-        public RoundFinishedResult(bool won, int levelIndex, int levelCount, string failureReason)
+        public RoundFinishedResult(bool won, int levelIndex, int levelCount, string failureReason, int reward)
         {
             Won = won;
+            Reward = reward;
             LevelIndex = levelIndex;
             IsLastLevel = levelIndex == levelCount - 1;
             NextLevelIndex = IsLastLevel ? levelIndex : levelIndex + 1;

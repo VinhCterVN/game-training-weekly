@@ -51,9 +51,13 @@ namespace BusJam
         [SerializeField] private float passengerSeatedScale = 0.6f;
 
         [Header("Vehicle Entrance")]
-        [SerializeField] private float vehicleEntranceDuration = 0.45f;
-        [SerializeField] private float vehicleEntranceStagger = 0.06f;
-        [SerializeField] private float vehicleEntranceOffset = 1.2f;
+        [SerializeField] private float vehicleEntranceDuration = 0.3f;
+        [SerializeField] private float vehicleEntranceStagger = 0.04f;
+        [SerializeField] private float vehicleEntranceOffset = 1.6f;
+        [SerializeField] private float vehicleLandPunch = 0.12f;
+        [SerializeField] private float vehicleLandPunchDuration = 0.18f;
+        [SerializeField] private Color landSpotlightColor = new Color(1f, 0.95f, 0.7f, 0.65f);
+        [SerializeField] private float landSpotlightDuration = 0.6f;
 
         [Header("Movement & Feedback")]
         [SerializeField] private float busExitDuration = 0.45f;
@@ -80,6 +84,9 @@ namespace BusJam
         [SerializeField] private Color clickPuffColor = new Color(1f, 0.8f, 0.25f);
         [SerializeField] private int clickPuffCount = 8;
 
+        [Header("Rewards")]
+        [SerializeField] private int winReward = 100;
+
         private RoundState State { get; set; }
         private bool IsBusy => _loading || _activeMotions > 0 || (State != null && State.BoardingTarget() >= 0);
         private int LevelIndex { get; set; }
@@ -95,7 +102,8 @@ namespace BusJam
         private readonly List<PassengerController> _seated = new();
         private float _cell;
         private Vector2 _origin;
-        private bool _paused, _roundOver, _loading;
+        private bool _paused, _roundOver, _loading, _homeOpen;
+        public int Coins => SaveData.Coins;
         private int _width, _height;
         private float _nextExhaust, _nextSelection, _nextBoarding;
         private int _activeMotions;
@@ -158,8 +166,8 @@ namespace BusJam
             _roundFeedback = new RoundFeedbackObserver(this, _audioFx, Pools);
             _roundPresenter = new RoundResultPresenter(this, UI);
             FitCamera();
-            int saved = Mathf.Clamp(PlayerPrefs.GetInt("BusJam.Level", 0), 0, catalog.levels.Length - 1);
-            LoadLevel(saved);
+            UI.SetCoins(SaveData.Coins);
+            LoadLevel(Mathf.Clamp(SaveData.Level, 0, catalog.levels.Length - 1));
             ShowHome();
         }
 
@@ -177,7 +185,7 @@ namespace BusJam
 
             if (Screen.width != _width || Screen.height != _height) FitCamera();
             if (Input.GetKeyDown(KeyCode.Escape)) TogglePause();
-            if (_loading || State == null || _roundOver || _paused || UI.ModalVisible) return;
+            if (_loading || State == null || _roundOver || _paused) return;
             LaunchNextPassenger();
             if (!IsBusy)
             {
@@ -250,8 +258,7 @@ namespace BusJam
                 return;
             }
 
-            PlayerPrefs.SetInt("BusJam.Level", LevelIndex);
-            PlayerPrefs.Save();
+            SaveData.Level = LevelIndex;
             State = new RoundState(level);
             _boardingInFlight = new int[level.vehicles.Count];
             _boardedCounts = new int[level.vehicles.Count];
@@ -280,29 +287,62 @@ namespace BusJam
             _loading = false;
         }
 
+        private static Sprite _spotlightSprite;
+
         private void PlayVehicleEntrance(BusController bus, Vector3 targetPosition, float delay)
         {
             _activeMotions++;
             bus.hitbox.enabled = false;
             bus.body.DOFade(0, 0);
             bus.transform.position = targetPosition + Vector3.up * vehicleEntranceOffset;
-            bus.transform.DOMove(targetPosition, vehicleEntranceDuration)
+            // Accelerating drop (sharp impact), quick fade-in during the first third, then a punch on landing.
+            DOTween.Sequence()
                 .SetDelay(delay)
-                .SetEase(Ease.OutCubic);
-            bus.body.DOFade(1, vehicleEntranceDuration)
-                .SetDelay(delay)
-                .SetEase(Ease.OutSine)
-                .OnComplete(() =>
+                .Append(bus.transform.DOMove(targetPosition, vehicleEntranceDuration).SetEase(Ease.InQuad))
+                .Join(bus.body.DOFade(1, vehicleEntranceDuration * .35f))
+                .AppendCallback(() =>
                 {
                     if (bus == null || !bus.gameObject.activeInHierarchy) return;
                     bus.hitbox.enabled = true;
                     _activeMotions = Mathf.Max(0, _activeMotions - 1);
-                });
+                    bus.transform.DOPunchScale(Vector3.one * vehicleLandPunch, vehicleLandPunchDuration, 1, 0);
+                    PlayLandSpotlight(bus);
+                })
+                .SetLink(bus.gameObject);
+        }
+
+        private void PlayLandSpotlight(BusController bus)
+        {
+            if (_spotlightSprite == null)
+            {
+                const int size = 64;
+                var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+                for (int y = 0; y < size; y++)
+                    for (int x = 0; x < size; x++)
+                    {
+                        float d = Mathf.Clamp01(Vector2.Distance(new Vector2(x, y), Vector2.one * (size - 1) * .5f) / (size * .5f));
+                        tex.SetPixel(x, y, new Color(1, 1, 1, (1 - d) * (1 - d)));
+                    }
+                tex.Apply();
+                _spotlightSprite = Sprite.Create(tex, new Rect(0, 0, size, size), Vector2.one * .5f, size);
+            }
+
+            var bounds = bus.body.bounds;
+            var go = new GameObject("LandSpotlight");
+            go.transform.SetParent(bus.transform.parent, true);
+            go.transform.position = new Vector3(bounds.center.x, bounds.min.y, bus.transform.position.z);
+            go.transform.localScale = new Vector3(bounds.size.x * 1.4f, bounds.size.x * .45f, 1);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = _spotlightSprite;
+            sr.color = landSpotlightColor;
+            sr.sortingLayerID = bus.body.sortingLayerID;
+            sr.sortingOrder = bus.body.sortingOrder - 1;
+            sr.DOFade(0, landSpotlightDuration).SetEase(Ease.OutQuad).OnComplete(() => Destroy(go)).SetLink(go);
         }
 
         private void TryDispatch(int id)
         {
-            if (_loading || State == null || _paused || _roundOver || UI.ModalVisible || Time.time < _nextSelection) return;
+            if (_loading || State == null || _paused || _roundOver || Time.time < _nextSelection) return;
             var result = State.Dispatch(id);
             if (result == DispatchResult.Accepted)
             {
@@ -335,7 +375,7 @@ namespace BusJam
             var placement = bus.Placement;
             Vector3 start = _origin + new Vector2(placement.x + placement.Width * .5f,
                 placement.y + placement.Height * .5f) * _cell;
-            Vector3 direction = (Vector3)(Vector2)placement.Direction;
+            Vector3 direction = (Vector2)placement.Direction;
             float travelDistance = BlockedTravelDistance(id);
 
             bus.hitbox.enabled = false;
@@ -542,19 +582,27 @@ namespace BusJam
         {
             if (_roundOver) return;
             _roundOver = true;
+            int reward = won ? winReward : 0;
+            if (won) SaveData.Coins += reward;
             var result = new RoundFinishedResult(won, LevelIndex, catalog.levels.Length,
-                won ? null : State.Deadlocked ? "No free bays" : "No moves left");
+                won ? null : State.Deadlocked ? "No free bays" : "No moves left", reward);
             RoundFinished?.Invoke(result);
         }
 
+        // Decides what follows a win: next level, or back to level 0 after the last one.
+        public void AdvanceLevel() => LoadLevel(LevelIndex >= catalog.levels.Length - 1 ? 0 : LevelIndex + 1);
+        public void RetryLevel() => LoadLevel(LevelIndex);
+
         private void StartPlaying()
         {
+            _homeOpen = false;
             _paused = false;
             Time.timeScale = 1;
         }
 
         private void ShowHome()
         {
+            _homeOpen = true;
             _paused = true;
             Time.timeScale = 0;
             UI.ShowHome();
@@ -568,7 +616,7 @@ namespace BusJam
 
         private void TogglePause(bool inGame = true)
         {
-            if (_roundOver || (UI.ModalVisible && !_paused)) return;
+            if (_roundOver) return;
             _paused = true;
             Time.timeScale = 0;
             UI.ShowSettings(withOptions: inGame);
@@ -578,7 +626,7 @@ namespace BusJam
         {
             UI.CloseSettings(() =>
             {
-                _paused = UI.ModalVisible;
+                _paused = _homeOpen;
                 Time.timeScale = _paused ? 0 : 1;
             });
         }

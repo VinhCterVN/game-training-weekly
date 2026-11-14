@@ -24,7 +24,6 @@ namespace BusJam
         private Action _primaryAction, _secondaryAction;
         private GameAudio _audio;
         private bool _actionPending;
-        public bool ModalVisible => manager.ModalVisible || _actionPending || coinEffect.IsPlaying;
 
         public void Initialize(Action onPlay, Action onHomeSettings, Action onSettings, Action retry, Action onHome,
             Action onClose, GameAudio gAudio, Action clickVfx)
@@ -40,7 +39,6 @@ namespace BusJam
             Bind(closeSettings, onClose);
             Bind(primary, () => InvokeResult(_primaryAction));
             Bind(secondary, () => InvokeResult(_secondaryAction));
-            hud.SetCoins(PlayerPrefs.GetInt("BusJam.Coins", 0));
         }
 
         private void Bind(Button button, Action action)
@@ -76,14 +74,14 @@ namespace BusJam
         public void CloseSettings(Action completed) => manager.CloseSettings(completed);
         public void Hide() => manager.CloseResult();
 
-        public void ClaimReward(Action completed)
+        public void SetCoins(int coins) => hud.SetCoins(coins);
+
+        // Display only: the game already credited `reward`; this animates the shown balance from `from` to from + reward.
+        public void PlayRewardFlight(int from, int reward, Action completed)
         {
-            coinEffect.Play(hud.CoinTarget, amount =>
+            coinEffect.Play(hud.CoinTarget, (landed, total) =>
             {
-                int coins = PlayerPrefs.GetInt("BusJam.Coins", 0) + amount;
-                PlayerPrefs.SetInt("BusJam.Coins", coins);
-                PlayerPrefs.Save();
-                hud.SetCoins(coins, true);
+                hud.SetCoins(from + Mathf.RoundToInt(reward * (landed / (float)total)), true);
                 _audio.Play(Cue.Coin);
             }, completed);
         }

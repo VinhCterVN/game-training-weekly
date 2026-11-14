@@ -15,7 +15,6 @@ namespace BusJam
         [SerializeField] private float coinInterval = 0.065f;
         [SerializeField] private float burstDuration = 0.18f;
         [SerializeField] private float flyDuration = 0.55f;
-        [SerializeField] private int coinsPerIcon = 20;
 
         private readonly Queue<RectTransform> _pool = new();
         private readonly List<Sequence> _flights = new();
@@ -24,7 +23,8 @@ namespace BusJam
         {
             foreach (var icon in _icons) { icon.gameObject.SetActive(false); _pool.Enqueue(icon); }
         }
-        public void Play(RectTransform target, Action<int> landed, Action completed)
+        // landed(landedCount, totalCount) lets the caller scale a displayed number; it carries no game data.
+        public void Play(RectTransform target, Action<int, int> landed, Action completed)
         {
             if (IsPlaying) return;
             IsPlaying = true;
@@ -53,7 +53,7 @@ namespace BusJam
                 {
                     icon.gameObject.SetActive(false);
                     _pool.Enqueue(icon);
-                    landed?.Invoke(coinsPerIcon);
+                    landed?.Invoke(count - remaining + 1, count);
                     if (--remaining != 0) return;
                     IsPlaying = false;
                     completed?.Invoke();

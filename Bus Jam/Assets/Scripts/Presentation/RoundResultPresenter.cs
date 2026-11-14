@@ -18,14 +18,17 @@ namespace BusJam
         private void OnRoundFinished(RoundFinishedResult result)
         {
             if (result.Won)
+            {
+                // The game already credited the reward; the HUD still shows the previous balance until the flight.
+                int shownBalance = _game.Coins - result.Reward;
                 _ui.Show(
-                    result.IsLastLevel ? "ALL LEVELS COMPLETE" : "LEVEL COMPLETE", "+100",
+                    result.IsLastLevel ? "ALL LEVELS COMPLETE" : "LEVEL COMPLETE", $"+{result.Reward}",
                     result.IsLastLevel ? "PLAY AGAIN" : "NEXT",
-                    () => _ui.ClaimReward(() => _game.LoadLevel(result.IsLastLevel ? 0 : result.NextLevelIndex)),
+                    () => _ui.PlayRewardFlight(shownBalance, result.Reward, _game.AdvanceLevel),
                     isWin: true);
+            }
             else
-                _ui.Show("TRY AGAIN", result.FailureReason, "RETRY", () => _game.LoadLevel(result.LevelIndex),
-                    isWin: false);
+                _ui.Show("TRY AGAIN", result.FailureReason, "RETRY", _game.RetryLevel, isWin: false);
         }
 
         public void Dispose() => _game.RoundFinished -= OnRoundFinished;

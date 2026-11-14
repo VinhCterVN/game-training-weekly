@@ -17,8 +17,7 @@ namespace BusJam
         private void OnRoundFinished(RoundFinishedResult result)
         {
             if (!result.Won) return;
-            PlayerPrefs.SetInt("BusJam.Level", result.NextLevelIndex);
-            PlayerPrefs.Save();
+            SaveData.Level = result.NextLevelIndex;
         }
 
         public void Dispose() => _game.RoundFinished -= OnRoundFinished;
