@@ -50,6 +50,11 @@ namespace BusJam
         [SerializeField] private float passengerJumpDuration = 0.22f;
         [SerializeField] private float passengerSeatedScale = 0.6f;
 
+        [Header("Vehicle Entrance")]
+        [SerializeField] private float vehicleEntranceDuration = 0.45f;
+        [SerializeField] private float vehicleEntranceStagger = 0.06f;
+        [SerializeField] private float vehicleEntranceOffset = 1.2f;
+
         [Header("Movement & Feedback")]
         [SerializeField] private float busExitDuration = 0.45f;
         [SerializeField] private float busPerimeterDuration = 0.25f;
@@ -62,6 +67,8 @@ namespace BusJam
         [SerializeField] private float bumpShakeStrength = 0.035f;
         [SerializeField] private float bumpPunchDistance = 0.13f;
         [SerializeField] private float bumpPunchDuration = 0.3f;
+        [SerializeField] private float jamApproachSpeed = 8f;
+        [SerializeField] private float jamReturnDuration = 0.2f;
 
         [Header("Visual Effects & Particle Cues")]
         [SerializeField] private Color exhaustPuffColor = new Color(0.94f, 0.96f, 1f, 0.6f);
@@ -163,13 +170,13 @@ namespace BusJam
             if (State != null && Time.time >= _nextExhaust)
             {
                 _nextExhaust = Time.time + exhaustInterval;
-                for (int i = 0; i < _buses.Count; i++)
+                for (var i = 0; i < _buses.Count; i++)
                     if (State.Phases[i] == VehiclePhase.Arriving || State.Phases[i] == VehiclePhase.Departing)
                         Pools.Puff(_buses[i].tail.position, exhaustPuffColor, exhaustPuffCount);
             }
 
             if (Screen.width != _width || Screen.height != _height) FitCamera();
-            if (Input.GetKeyDown(KeyCode.Escape)) TogglePause(true);
+            if (Input.GetKeyDown(KeyCode.Escape)) TogglePause();
             if (_loading || State == null || _roundOver || _paused || UI.ModalVisible) return;
             LaunchNextPassenger();
             if (!IsBusy)
@@ -255,12 +262,13 @@ namespace BusJam
             {
                 var v = level.vehicles[i];
                 var bus = Pools.Vehicles.Get();
-                bus.Configure(i, v, catalog, _cell,
-                    _origin + new Vector2(v.x + v.Width * .5f, v.y + v.Height * .5f) * _cell);
+                Vector3 targetPosition = _origin + new Vector2(v.x + v.Width * .5f, v.y + v.Height * .5f) * _cell;
+                bus.Configure(i, v, catalog, _cell, targetPosition);
                 _buses.Add(bus);
+                PlayVehicleEntrance(bus, targetPosition, i * vehicleEntranceStagger);
             }
 
-            for (int i = 0; i < parkingBays.Length; i++)
+            for (var i = 0; i < parkingBays.Length; i++)
             {
                 parkingBays[i].gameObject.SetActive(i < level.bayCount);
                 parkingBays[i].position = BayPosition(i, level.bayCount);
@@ -270,6 +278,26 @@ namespace BusJam
             UI.Hide();
             UI.Refresh(LevelIndex, State);
             _loading = false;
+        }
+
+        private void PlayVehicleEntrance(BusController bus, Vector3 targetPosition, float delay)
+        {
+            _activeMotions++;
+            bus.hitbox.enabled = false;
+            bus.body.DOFade(0, 0);
+            bus.transform.position = targetPosition + Vector3.up * vehicleEntranceOffset;
+            bus.transform.DOMove(targetPosition, vehicleEntranceDuration)
+                .SetDelay(delay)
+                .SetEase(Ease.OutCubic);
+            bus.body.DOFade(1, vehicleEntranceDuration)
+                .SetDelay(delay)
+                .SetEase(Ease.OutSine)
+                .OnComplete(() =>
+                {
+                    if (bus == null || !bus.gameObject.activeInHierarchy) return;
+                    bus.hitbox.enabled = true;
+                    _activeMotions = Mathf.Max(0, _activeMotions - 1);
+                });
         }
 
         private void TryDispatch(int id)
@@ -284,17 +312,80 @@ namespace BusJam
             }
             else if (result == DispatchResult.Blocked || result == DispatchResult.BaysFull)
             {
-                _audioFx.Play(Cue.Bump);
-                HapticFeedback.Play(HapticCue.Warning);
-                var v = _buses[id].Placement;
-                _buses[id].transform.DOKill();
-                _buses[id].transform.localScale = Vector3.one;
-                _buses[id].transform.position =
-                    _origin + new Vector2(v.x + v.Width * .5f, v.y + v.Height * .5f) * _cell;
-                _buses[id].transform.DOPunchPosition((Vector3)(Vector2)v.Direction * bumpPunchDistance, bumpPunchDuration, 5, .5f);
-                Shake(bumpShakeStrength);
-                Pools.Puff(_buses[id].head.position, bumpPuffColor, bumpPuffCount);
+                if (result == DispatchResult.Blocked)
+                {
+                    _nextSelection = Time.time + Mathf.Max(.02f, selectionDelay);
+                    StartCoroutine(RunIntoJam(id));
+                }
+                else
+                {
+                    PlayJamFeedback(_buses[id]);
+                    _buses[id].transform.DOPunchPosition(
+                        (Vector3)(Vector2)_buses[id].Placement.Direction * bumpPunchDistance,
+                        bumpPunchDuration, 5, .5f);
+                    Shake(bumpShakeStrength);
+                }
             }
+        }
+
+        private IEnumerator RunIntoJam(int id)
+        {
+            _activeMotions++;
+            var bus = _buses[id];
+            var placement = bus.Placement;
+            Vector3 start = _origin + new Vector2(placement.x + placement.Width * .5f,
+                placement.y + placement.Height * .5f) * _cell;
+            Vector3 direction = (Vector3)(Vector2)placement.Direction;
+            float travelDistance = BlockedTravelDistance(id);
+
+            bus.hitbox.enabled = false;
+            bus.transform.DOKill();
+            bus.transform.position = start;
+            bus.transform.localScale = Vector3.one;
+            _audioFx.Play(Cue.Tap);
+            _audioFx.Play(Cue.Engine);
+            if (travelDistance > 0)
+            {
+                float approachDuration = travelDistance / Mathf.Max(.1f, jamApproachSpeed);
+                Pools.Puff(bus.tail.position, exhaustPuffColor, exhaustPuffCount);
+                yield return bus.transform.DOMove(start + direction * travelDistance, approachDuration)
+                    .SetEase(Ease.InQuad).WaitForCompletion();
+            }
+
+            PlayJamFeedback(bus);
+            Shake(bumpShakeStrength);
+            yield return bus.transform.DOMove(start, jamReturnDuration).SetEase(Ease.OutSine).WaitForCompletion();
+            bus.hitbox.enabled = true;
+            _activeMotions--;
+        }
+
+        private float BlockedTravelDistance(int id)
+        {
+            var placement = _buses[id].Placement;
+            var occupancy = State.Occupancy();
+            Vector2Int step = placement.Direction;
+
+            for (int distance = 1; ; distance++)
+            {
+                int x = placement.x + step.x * distance;
+                int y = placement.y + step.y * distance;
+                bool reachedExit = x + placement.Width <= 0 || y + placement.Height <= 0 ||
+                                   x >= State.Level.columns || y >= State.Level.rows;
+                if (reachedExit) return 0;
+
+                for (int cellX = x; cellX < x + placement.Width; cellX++)
+                for (int cellY = y; cellY < y + placement.Height; cellY++)
+                    if (cellX >= 0 && cellX < State.Level.columns && cellY >= 0 && cellY < State.Level.rows &&
+                        occupancy[cellX, cellY] >= 0 && occupancy[cellX, cellY] != id)
+                        return (distance - 1) * _cell;
+            }
+        }
+
+        private void PlayJamFeedback(BusController bus)
+        {
+            _audioFx.Play(Cue.Bump);
+            HapticFeedback.Play(HapticCue.Warning);
+            Pools.Puff(bus.head.position, bumpPuffColor, bumpPuffCount);
         }
 
         private IEnumerator DispatchFlow(int id)

@@ -17,22 +17,41 @@ namespace BusJam
 
         private void OnEnable()
         {
-            sound.SetIsOnWithoutNotify(SettingsManager.IsSoundOn);
-            music.SetIsOnWithoutNotify(SettingsManager.IsMusicOn);
-            haptic.SetIsOnWithoutNotify(SettingsManager.IsHapticOn);
+            Debug.Log("[Settings] OnEnable called");
+
+            Debug.Log($"Sound reference: {sound}");
+            Debug.Log($"Music reference: {music}");
+            Debug.Log($"Haptic reference: {haptic}");
+
             sound.onValueChanged.AddListener(Sound);
             music.onValueChanged.AddListener(Music);
             haptic.onValueChanged.AddListener(Haptic);
+
+            sound.SetIsOnWithoutNotify(SettingsManager.IsSoundOn);
+            music.SetIsOnWithoutNotify(SettingsManager.IsMusicOn);
+            haptic.SetIsOnWithoutNotify(SettingsManager.IsHapticOn);
         }
-        private void OnDisable()
+
+        private void Sound(bool value)
         {
-            sound.onValueChanged.RemoveListener(Sound);
-            music.onValueChanged.RemoveListener(Music);
-            haptic.onValueChanged.RemoveListener(Haptic);
+            Debug.Log($"[Settings] Sound toggled: {value}");
+            SettingsManager.SetSound(value);
+            Feedback();
         }
-        private void Sound(bool value) { SettingsManager.SetSound(value); Feedback(); }
-        private void Music(bool value) { SettingsManager.SetMusic(value); Feedback(); }
-        private void Haptic(bool value) { SettingsManager.SetHaptic(value); Feedback(); }
+
+        private void Music(bool value)
+        {
+            Debug.Log($"[Settings] Music toggled: {value}");
+            SettingsManager.SetMusic(value);
+            Feedback();
+        }
+
+        private void Haptic(bool value)
+        {
+            Debug.Log($"[Settings] Haptic toggled: {value}");
+            SettingsManager.SetHaptic(value);
+            Feedback();
+        }
         private void Feedback() => GetComponentInParent<GameUI>().ClickFeedback();
     }
 }

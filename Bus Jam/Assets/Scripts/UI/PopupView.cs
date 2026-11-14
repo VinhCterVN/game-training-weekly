@@ -10,6 +10,7 @@ namespace BusJam
         [SerializeField] private CanvasGroup _backdrop;
         [SerializeField] private RectTransform _card;
         [SerializeField] private RectTransform options = null;
+        [SerializeField] private GameObject congrats = null;
 
         [Header("Animation Settings")]
         [SerializeField] private float cardInitialScale = 0.5f;
@@ -22,12 +23,13 @@ namespace BusJam
 
         private Sequence _transition;
         public bool Visible { get; private set; }
-        public void Open(bool withOptions = false)
+        public void Open(bool withOptions = false, bool isWin = true)
         {
             _transition?.Kill();
             Visible = true;
             gameObject.SetActive(true);
             if (options != null) options.gameObject.SetActive(withOptions);
+            if (congrats != null) congrats.SetActive(isWin);
             _group.alpha = 1;
             _group.blocksRaycasts = _group.interactable = true;
             _card.localScale = Vector3.one * cardInitialScale;

@@ -89,7 +89,7 @@ namespace BusJam
         }
 
         public void Show(string xTitle, string xBody, string action, Action onPrimary, string second = null,
-            Action onSecondary = null)
+            Action onSecondary = null, bool isWin = true)
         {
             title.text = xTitle;
             body.text = xBody ?? "";
@@ -101,7 +101,7 @@ namespace BusJam
             ((RectTransform)primary.transform).anchoredPosition = new Vector2(0, hasSecond ? primaryYWithSecondary : primaryYAlone);
             _primaryAction = onPrimary;
             _secondaryAction = onSecondary;
-            manager.ShowResult();
+            manager.ShowResult(isWin);
         }
     }
 }

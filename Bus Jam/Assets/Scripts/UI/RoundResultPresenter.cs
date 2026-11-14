@@ -18,11 +18,14 @@ namespace BusJam
         private void OnRoundFinished(RoundFinishedResult result)
         {
             if (result.Won)
-                _ui.Show(result.IsLastLevel ? "ALL LEVELS COMPLETE" : "LEVEL COMPLETE", "+100",
+                _ui.Show(
+                    result.IsLastLevel ? "ALL LEVELS COMPLETE" : "LEVEL COMPLETE", "+100",
                     result.IsLastLevel ? "PLAY AGAIN" : "NEXT",
-                    () => _ui.ClaimReward(() => _game.LoadLevel(result.IsLastLevel ? 0 : result.NextLevelIndex)));
+                    () => _ui.ClaimReward(() => _game.LoadLevel(result.IsLastLevel ? 0 : result.NextLevelIndex)),
+                    isWin: true);
             else
-                _ui.Show("TRY AGAIN", result.FailureReason, "RETRY", () => _game.LoadLevel(result.LevelIndex));
+                _ui.Show("TRY AGAIN", result.FailureReason, "RETRY", () => _game.LoadLevel(result.LevelIndex),
+                    isWin: false);
         }
 
         public void Dispose() => _game.RoundFinished -= OnRoundFinished;
