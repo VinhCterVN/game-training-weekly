@@ -11,6 +11,7 @@ namespace BusJam
         [Header("Configuration & References")]
         [SerializeField] private GameCatalog catalog;
         [SerializeField] private Camera gameCamera;
+        [SerializeField] private BackgroundFitter backgroundFitter;
         [SerializeField] private GameUI uiInScene;
         [SerializeField] private Transform[] parkingBays = new Transform[3];
 
@@ -217,11 +218,13 @@ namespace BusJam
         {
             _width = Screen.width;
             _height = Screen.height;
+            if (_width <= 0 || _height <= 0) return;
             float aspect = _width / (float)_height, target = referenceResolution.x / referenceResolution.y;
-            gameCamera.rect = aspect > target
-                ? new Rect((1 - target / aspect) * .5f, 0, target / aspect, 1)
-                : new Rect(0, (1 - aspect / target) * .5f, 1, aspect / target);
-            gameCamera.orthographicSize = cameraOrthographicSize;
+            gameCamera.rect = new Rect(0f, 0f, 1f, 1f);
+            gameCamera.orthographicSize = aspect < target
+                ? cameraOrthographicSize * (target / aspect)
+                : cameraOrthographicSize;
+            if (backgroundFitter != null) backgroundFitter.Fit();
         }
 
         public void LoadLevel(int index)
