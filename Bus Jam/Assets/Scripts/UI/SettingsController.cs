@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,48 +9,79 @@ namespace BusJam
         [SerializeField] private Toggle music;
         [SerializeField] private Toggle haptic;
 
-        private void Start()
-        {
-            Debug.Log("Initialized SettingsController");
-        }
+        [Header("Toggle Visuals")]
+        [SerializeField] private Image soundFrame;
+        [SerializeField] private Image musicFrame;
+        [SerializeField] private Image hapticFrame;
+        [SerializeField] private Image soundIcon;
+        [SerializeField] private Image musicIcon;
+        [SerializeField] private Image hapticIcon;
+        [SerializeField] private Color activeFrameColor = Color.white;
+        [SerializeField] private Color inactiveFrameColor = new Color(0.55f, 0.58f, 0.65f, 1f);
+        [SerializeField] private Color activeIconColor = Color.white;
+        [SerializeField] private Color inactiveIconColor = new Color(0.75f, 0.78f, 0.82f, 0.55f);
 
         private void OnEnable()
         {
-            Debug.Log("[Settings] OnEnable called");
-
-            Debug.Log($"Sound reference: {sound}");
-            Debug.Log($"Music reference: {music}");
-            Debug.Log($"Haptic reference: {haptic}");
-
-            sound.onValueChanged.AddListener(Sound);
-            music.onValueChanged.AddListener(Music);
-            haptic.onValueChanged.AddListener(Haptic);
-
-            sound.SetIsOnWithoutNotify(SettingsManager.IsSoundOn);
-            music.SetIsOnWithoutNotify(SettingsManager.IsMusicOn);
-            haptic.SetIsOnWithoutNotify(SettingsManager.IsHapticOn);
+            SyncState();
+            if (sound != null) sound.onValueChanged.AddListener(OnSoundChanged);
+            if (music != null) music.onValueChanged.AddListener(OnMusicChanged);
+            if (haptic != null) haptic.onValueChanged.AddListener(OnHapticChanged);
         }
 
-        private void Sound(bool value)
+        private void OnDisable()
         {
-            Debug.Log($"[Settings] Sound toggled: {value}");
+            if (sound != null) sound.onValueChanged.RemoveListener(OnSoundChanged);
+            if (music != null) music.onValueChanged.RemoveListener(OnMusicChanged);
+            if (haptic != null) haptic.onValueChanged.RemoveListener(OnHapticChanged);
+        }
+
+        private void SyncState()
+        {
+            bool soundOn = SettingsManager.IsSoundOn;
+            bool musicOn = SettingsManager.IsMusicOn;
+            bool hapticOn = SettingsManager.IsHapticOn;
+
+            if (sound != null) sound.SetIsOnWithoutNotify(soundOn);
+            if (music != null) music.SetIsOnWithoutNotify(musicOn);
+            if (haptic != null) haptic.SetIsOnWithoutNotify(hapticOn);
+
+            ApplyVisual(soundFrame, soundIcon, soundOn);
+            ApplyVisual(musicFrame, musicIcon, musicOn);
+            ApplyVisual(hapticFrame, hapticIcon, hapticOn);
+        }
+
+        private void OnSoundChanged(bool value)
+        {
             SettingsManager.SetSound(value);
+            ApplyVisual(soundFrame, soundIcon, value);
             Feedback();
         }
 
-        private void Music(bool value)
+        private void OnMusicChanged(bool value)
         {
-            Debug.Log($"[Settings] Music toggled: {value}");
             SettingsManager.SetMusic(value);
+            ApplyVisual(musicFrame, musicIcon, value);
             Feedback();
         }
 
-        private void Haptic(bool value)
+        private void OnHapticChanged(bool value)
         {
-            Debug.Log($"[Settings] Haptic toggled: {value}");
             SettingsManager.SetHaptic(value);
+            ApplyVisual(hapticFrame, hapticIcon, value);
             Feedback();
         }
-        private void Feedback() => GetComponentInParent<GameUI>().ClickFeedback();
+
+        private void ApplyVisual(Image frame, Image icon, bool isOn)
+        {
+            if (frame != null) frame.color = isOn ? activeFrameColor : inactiveFrameColor;
+            if (icon != null) icon.color = isOn ? activeIconColor : inactiveIconColor;
+        }
+
+        private void Feedback()
+        {
+            var ui = GetComponentInParent<GameUI>();
+            if (ui != null) ui.ClickFeedback();
+        }
     }
 }

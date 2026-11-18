@@ -43,6 +43,7 @@ namespace BusJam
 
         private void Bind(Button button, Action action)
         {
+            if (button == null) return;
             button.onClick.AddListener(() =>
             {
                 if (_actionPending || coinEffect.IsPlaying) return;
