@@ -12,6 +12,8 @@ namespace BusJam
         [SerializeField] private GameCatalog catalog;
         [SerializeField] private Camera gameCamera;
         [SerializeField] private BackgroundFitter backgroundFitter;
+        [SerializeField] private GameObject gameplaySceneryRoot;
+        [SerializeField] private Transform pooledGameplayRoot;
         [SerializeField] private GameUI uiInScene;
         [SerializeField] private Transform[] parkingBays = new Transform[3];
 
@@ -130,8 +132,15 @@ namespace BusJam
 
             int maxVehicles = 1;
             foreach (var level in catalog.levels) maxVehicles = Mathf.Max(maxVehicles, level.vehicles.Count);
-            _world = new GameObject("Pooled gameplay").transform;
-            _world.SetParent(transform, false);
+            if (pooledGameplayRoot != null)
+            {
+                _world = pooledGameplayRoot;
+            }
+            else
+            {
+                _world = new GameObject("Pooled gameplay").transform;
+                _world.SetParent(transform, false);
+            }
             Pools = new GamePools(catalog, _world, maxVehicles);
             _audioFx = gameObject.AddComponent<GameAudio>();
             _audioFx.Initialize();
@@ -159,6 +168,7 @@ namespace BusJam
                 gAudio: _audioFx,
                 clickVfx: () =>
                 {
+                    if (_homeOpen) return;
                     Vector3 point = gameCamera.ScreenToWorldPoint(Input.mousePosition);
                     point.z = 0;
                     Pools.Puff(point, clickPuffColor, clickPuffCount);
@@ -168,15 +178,14 @@ namespace BusJam
             _roundPresenter = new RoundResultPresenter(this, UI);
             FitCamera();
             UI.SetCoins(SaveData.Coins);
-            LoadLevel(Mathf.Clamp(SaveData.Level, 0, catalog.levels.Length - 1));
-            ShowHome();
+            ShowHome(instant: true);
         }
 
         private void Update()
         {
             if (Pools == null) return;
             Pools.Tick();
-            if (State != null && Time.time >= _nextExhaust)
+            if (!_homeOpen && State != null && Time.time >= _nextExhaust)
             {
                 _nextExhaust = Time.time + exhaustInterval;
                 for (var i = 0; i < _buses.Count; i++)
@@ -185,8 +194,8 @@ namespace BusJam
             }
 
             if (Screen.width != _width || Screen.height != _height) FitCamera();
-            if (Input.GetKeyDown(KeyCode.Escape)) TogglePause();
-            if (_loading || State == null || _roundOver || _paused) return;
+            if (Input.GetKeyDown(KeyCode.Escape) && !_homeOpen) TogglePause();
+            if (_homeOpen || _loading || State == null || _roundOver || _paused) return;
             LaunchNextPassenger();
             if (!IsBusy)
             {
@@ -227,16 +236,16 @@ namespace BusJam
             if (backgroundFitter != null) backgroundFitter.Fit();
         }
 
-        public void LoadLevel(int index)
+        private void ReleaseGameplayObjects()
         {
-            _loading = true;
-            Time.timeScale = 1;
-            _paused = false;
             StopAllCoroutines();
             _activeMotions = 0;
-            _nextSelection = _nextBoarding = _nextExhaust = Time.time;
-            gameCamera.transform.DOKill();
-            gameCamera.transform.position = new Vector3(0, 0, -10);
+            if (gameCamera != null)
+            {
+                gameCamera.transform.DOKill();
+                gameCamera.transform.position = new Vector3(0, 0, -10);
+            }
+            if (Pools == null) return;
             foreach (var p in _seated)
             {
                 p.transform.SetParent(_world, true);
@@ -251,6 +260,16 @@ namespace BusJam
                     Pools.Vehicles.Release(b);
             _buses.Clear();
             Pools.ClearEffects();
+        }
+
+        public void LoadLevel(int index)
+        {
+            _loading = true;
+            Time.timeScale = 1;
+            _paused = false;
+            _nextSelection = _nextBoarding = _nextExhaust = Time.time;
+            ReleaseGameplayObjects();
+            if (gameplaySceneryRoot != null) gameplaySceneryRoot.SetActive(true);
             LevelIndex = Mathf.Clamp(index, 0, catalog.levels.Length - 1);
             var level = catalog.levels[LevelIndex];
             var errors = level.Validate();
@@ -601,14 +620,23 @@ namespace BusJam
             _homeOpen = false;
             _paused = false;
             Time.timeScale = 1;
+            if (gameplaySceneryRoot != null) gameplaySceneryRoot.SetActive(true);
+            FitCamera();
+            LoadLevel(Mathf.Clamp(SaveData.Level, 0, catalog.levels.Length - 1));
         }
 
-        private void ShowHome()
+        private void ShowHome(bool instant = false)
         {
             _homeOpen = true;
             _paused = true;
+            _roundOver = false;
             Time.timeScale = 0;
-            UI.ShowHome();
+            ReleaseGameplayObjects();
+            State = null;
+            if (gameplaySceneryRoot != null) gameplaySceneryRoot.SetActive(false);
+            UI.SetCoins(SaveData.Coins);
+            UI.SetHomeLevel(Mathf.Clamp(SaveData.Level, 0, catalog.levels.Length - 1));
+            UI.ShowHome(instant);
         }
 
         private void OpenSettingsFromHome()
