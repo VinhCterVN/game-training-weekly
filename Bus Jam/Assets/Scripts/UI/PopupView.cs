@@ -11,6 +11,8 @@ namespace BusJam
         [SerializeField] private RectTransform _card;
         [SerializeField] private RectTransform options = null;
         [SerializeField] private GameObject congrats = null;
+        [SerializeField] private GameObject loseBanner = null;
+        [SerializeField] private GameObject rewardIcon = null;
 
         [Header("Animation Settings")]
         [SerializeField] private float cardInitialScale = 0.5f;
@@ -30,6 +32,8 @@ namespace BusJam
             gameObject.SetActive(true);
             if (options != null) options.gameObject.SetActive(withOptions);
             if (congrats != null) congrats.SetActive(isWin);
+            if (loseBanner != null) loseBanner.SetActive(!isWin);
+            if (rewardIcon != null) rewardIcon.SetActive(isWin);
             _group.alpha = 1;
             _group.blocksRaycasts = _group.interactable = true;
             _card.localScale = Vector3.one * cardInitialScale;
