@@ -262,6 +262,7 @@ MonoBehaviour:
   shakeVibrato: 12
   maxGridWidth: 9.6
   maxGridHeight: 8.8
+  maxCellSize: 1
   gridCenterY: -2.75
   baySpacing: 2.15
   bayPosY: 4.35
@@ -4662,7 +4663,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -2}
+  m_AnchoredPosition: {x: 0, y: -41}
   m_SizeDelta: {x: 0, y: 140}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!1 &8984632433575548835
@@ -12482,7 +12483,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -11}
+  m_AnchoredPosition: {x: 0, y: -24}
   m_SizeDelta: {x: 0, y: 132}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!1 &8984632433575549185
@@ -12521,7 +12522,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 201.0479, y: -66}
+  m_AnchoredPosition: {x: 199.80797, y: -66}
   m_SizeDelta: {x: 260, y: 86}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8984632433575549187
@@ -12806,7 +12807,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 578.1437, y: -66}
+  m_AnchoredPosition: {x: 574.4239, y: -66}
   m_SizeDelta: {x: 310, y: 98}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8984632433575549199
@@ -13016,7 +13017,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 881.2395, y: -66}
+  m_AnchoredPosition: {x: 875.03986, y: -66}
   m_SizeDelta: {x: 112, y: 102}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8984632433575549207

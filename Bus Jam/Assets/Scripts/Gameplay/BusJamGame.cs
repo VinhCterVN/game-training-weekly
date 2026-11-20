@@ -36,6 +36,7 @@ namespace BusJam
         [Header("Grid & Board Layout")]
         [SerializeField] private float maxGridWidth = 8.5f;
         [SerializeField] private float maxGridHeight = 7.2f;
+        [Min(0.1f)] [SerializeField] private float maxCellSize = 1.0f;
         [SerializeField] private float gridCenterY = -2.75f;
         [SerializeField] private float baySpacing = 2.15f;
         [SerializeField] private float bayPosY = 4.35f;
@@ -345,7 +346,7 @@ namespace BusJam
             _boardingInFlight = new int[level.vehicles.Count];
             _boardedCounts = new int[level.vehicles.Count];
             _roundOver = false;
-            _cell = Mathf.Min(maxGridWidth / level.columns, maxGridHeight / level.rows);
+            _cell = Mathf.Min(maxCellSize, maxGridWidth / level.columns, maxGridHeight / level.rows);
             _origin = new Vector2(-level.columns * _cell * .5f, CurrentGridCenterY() - level.rows * _cell * .5f);
             for (int i = 0; i < level.vehicles.Count; i++)
             {
