@@ -49,6 +49,9 @@ sysinfo.txt
 *.app
 /[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
 
-.codex/
-graphify-out/
-AGENTS.md
+docs/
+**/.codex/
+**/.agents/
+**/graphify-out/
+**/AGENTS.md
+**/graphify-out.meta

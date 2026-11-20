@@ -71,16 +71,23 @@ namespace BusJam
             count.transform.localPosition = new Vector3(0, -height * .5f - countYOffset, -.1f);
         }
 
-        public void Park()
+        public void Park(float tiltAngle = 0f)
         {
             _cell = Placement.kind == VehicleKind.Car ? parkCarCell : parkBusCell;
+            transform.rotation = Quaternion.Euler(0f, 0f, tiltAngle);
             SetArt(Facing.Up, true);
             count.gameObject.SetActive(true);
+            count.transform.rotation = Quaternion.identity;
             SetCount(0);
         }
 
         public void SetCount(int loaded) => count.text = $"{loaded}/{Placement.Capacity}";
-        public void CloseRoof() => SetArt(Facing.Right, false);
+
+        public void CloseRoof()
+        {
+            transform.rotation = Quaternion.identity;
+            SetArt(Facing.Right, false);
+        }
 
         public void ResetView()
         {

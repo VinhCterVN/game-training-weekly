@@ -38,7 +38,22 @@ namespace BusJam
         [SerializeField] private float maxGridHeight = 7.2f;
         [SerializeField] private float gridCenterY = -2.75f;
         [SerializeField] private float baySpacing = 2.15f;
-        [SerializeField] private float bayPosY = 3.85f;
+        [SerializeField] private float bayPosY = 4.35f;
+
+        [Header("Background-Aligned Bays & Queue")]
+        [SerializeField] private bool alignToBackground = true;
+        [SerializeField] private float bayCurbNormalizedY = 0.716f;
+        [SerializeField] private float bayCurbUsableWidthRatio = 0.62f;
+        [SerializeField] private float bayTiltAngle = 20f;
+        [SerializeField] private Vector2 bayVisualScale = new Vector2(0.52f, 0.48f);
+        [SerializeField] private float gridNormalizedY = 0.36f;
+        [SerializeField] private float queueLeftNormalizedX = 0.305f;
+        [SerializeField] private float queueRightNormalizedX = 0.762f;
+        [SerializeField] private float queueFrontNormalizedY = 0.798f;
+        [SerializeField] private float queueBarNormalizedY = 0.850f;
+        [SerializeField] private float queueBackNormalizedY = 0.808f;
+        [SerializeField] private int queueVerticalCount = 4;
+        [SerializeField] private int queueHorizontalCount = 13;
 
         [Header("Passenger Queue")]
         [SerializeField] private int visiblePassengers = 20;
@@ -234,6 +249,51 @@ namespace BusJam
                 ? cameraOrthographicSize * (target / aspect)
                 : cameraOrthographicSize;
             if (backgroundFitter != null) backgroundFitter.Fit();
+            RelayoutActiveWorld();
+        }
+
+        private float CurrentGridCenterY() =>
+            alignToBackground && backgroundFitter != null
+                ? backgroundFitter.NormalizedToWorld(0.5f, gridNormalizedY).y
+                : gridCenterY;
+
+        private void RelayoutActiveWorld()
+        {
+            if (_homeOpen || _loading || State == null) return;
+            _origin = new Vector2(-State.Level.columns * _cell * .5f, CurrentGridCenterY() - State.Level.rows * _cell * .5f);
+            for (var i = 0; i < _buses.Count; i++)
+            {
+                if (State.Phases[i] == VehiclePhase.Grid && _buses[i].hitbox.enabled)
+                {
+                    var v = _buses[i].Placement;
+                    _buses[i].transform.position = _origin + new Vector2(v.x + v.Width * .5f, v.y + v.Height * .5f) * _cell;
+                }
+            }
+
+            int bayCount = State.Bays.Length;
+            Quaternion bayRotation = Quaternion.Euler(0f, 0f, bayTiltAngle);
+            Vector3 bayScale = new Vector3(bayVisualScale.x, bayVisualScale.y, 1f);
+            for (var i = 0; i < parkingBays.Length; i++)
+            {
+                bool active = i < bayCount;
+                parkingBays[i].gameObject.SetActive(active);
+                if (!active) continue;
+                parkingBays[i].position = BayPosition(i, bayCount);
+                parkingBays[i].rotation = bayRotation;
+                parkingBays[i].localScale = bayScale;
+            }
+
+            for (var i = 0; i < State.Bays.Length; i++)
+            {
+                int vehicleId = State.Bays[i];
+                if (vehicleId >= 0 && vehicleId < _buses.Count && State.Phases[vehicleId] == VehiclePhase.Waiting)
+                {
+                    _buses[vehicleId].transform.position = BayPosition(i, bayCount);
+                    _buses[vehicleId].transform.rotation = bayRotation;
+                }
+            }
+
+            RefreshPassengers(false);
         }
 
         private void ReleaseGameplayObjects()
@@ -286,7 +346,7 @@ namespace BusJam
             _boardedCounts = new int[level.vehicles.Count];
             _roundOver = false;
             _cell = Mathf.Min(maxGridWidth / level.columns, maxGridHeight / level.rows);
-            _origin = new Vector2(-level.columns * _cell * .5f, gridCenterY - level.rows * _cell * .5f);
+            _origin = new Vector2(-level.columns * _cell * .5f, CurrentGridCenterY() - level.rows * _cell * .5f);
             for (int i = 0; i < level.vehicles.Count; i++)
             {
                 var v = level.vehicles[i];
@@ -297,10 +357,16 @@ namespace BusJam
                 PlayVehicleEntrance(bus, targetPosition, i * vehicleEntranceStagger);
             }
 
+            Quaternion bayRotation = Quaternion.Euler(0f, 0f, bayTiltAngle);
+            Vector3 bayScale = new Vector3(bayVisualScale.x, bayVisualScale.y, 1f);
             for (var i = 0; i < parkingBays.Length; i++)
             {
-                parkingBays[i].gameObject.SetActive(i < level.bayCount);
+                bool active = i < level.bayCount;
+                parkingBays[i].gameObject.SetActive(active);
+                if (!active) continue;
                 parkingBays[i].position = BayPosition(i, level.bayCount);
+                parkingBays[i].rotation = bayRotation;
+                parkingBays[i].localScale = bayScale;
             }
 
             RefreshPassengers(false);
@@ -494,8 +560,9 @@ namespace BusJam
             bus.SetArt(bus.transform.position.x < bay.x ? Facing.Right : Facing.Left, false);
             yield return bus.transform.DOMove(new Vector3(bay.x, top), busAlignDuration).SetEase(Ease.Linear).WaitForCompletion();
             bus.SetArt(Facing.Up, false);
+            bus.transform.DORotate(new Vector3(0f, 0f, bayTiltAngle), busParkDuration).SetEase(Ease.OutSine);
             yield return bus.transform.DOMove(bay, busParkDuration).SetEase(Ease.OutSine).WaitForCompletion();
-            bus.Park();
+            bus.Park(bayTiltAngle);
             State.Arrive(id);
             UI.Refresh(LevelIndex, State);
             _activeMotions--;
@@ -558,7 +625,9 @@ namespace BusJam
             Shake(departShakeStrength);
             vehicle.transform.DOPunchScale(new Vector3(.12f, -.06f, 0), .3f, 1);
             Pools.Puff(vehicle.tail.position, departPuffColor, departPuffCount);
-            yield return vehicle.transform.DOMoveX(departExitX, departDuration).SetEase(Ease.InCubic).WaitForCompletion();
+            float exitX = departExitX;
+            if (gameCamera != null) exitX = Mathf.Max(exitX, gameCamera.orthographicSize * gameCamera.aspect + 2.5f);
+            yield return vehicle.transform.DOMoveX(exitX, departDuration).SetEase(Ease.InCubic).WaitForCompletion();
             State.Depart(target);
             Pools.Vehicles.Release(vehicle);
             UI.Refresh(LevelIndex, State);
@@ -586,12 +655,50 @@ namespace BusJam
             }
         }
 
-        private Vector3 PassengerPosition(int i) => i < queueTurnThreshold
-            ? new Vector3(queueFrontStartX + i * queueFrontSpacing, queueFrontY, 0)
-            : new Vector3(queueTurnX, queueFrontY + (i - (queueTurnThreshold - 1)) * queueTurnSpacingY, 0);
+        private Vector3 PassengerPosition(int i)
+        {
+            if (alignToBackground && backgroundFitter != null)
+            {
+                int verticalCount = Mathf.Max(2, queueVerticalCount);
+                int horizontalCount = Mathf.Max(2, queueHorizontalCount);
+                if (i < verticalCount)
+                {
+                    float t = i / (float)(verticalCount - 1);
+                    float v = Mathf.Lerp(queueFrontNormalizedY, queueBarNormalizedY, t);
+                    return backgroundFitter.NormalizedToWorld(queueLeftNormalizedX, v);
+                }
 
-        private Vector3 BayPosition(int slot, int count) =>
-            new Vector3((slot - (count - 1) * .5f) * baySpacing, bayPosY, 0);
+                int horizIndex = i - verticalCount + 1;
+                if (horizIndex <= horizontalCount)
+                {
+                    float t = horizIndex / (float)horizontalCount;
+                    float u = Mathf.Lerp(queueLeftNormalizedX, queueRightNormalizedX, t);
+                    return backgroundFitter.NormalizedToWorld(u, queueBarNormalizedY);
+                }
+
+                int backIndex = horizIndex - horizontalCount;
+                int backTotal = Mathf.Max(1, visiblePassengers - verticalCount - horizontalCount);
+                float bt = Mathf.Clamp01(backIndex / (float)backTotal);
+                float bv = Mathf.Lerp(queueBarNormalizedY, queueBackNormalizedY, bt);
+                return backgroundFitter.NormalizedToWorld(queueRightNormalizedX, bv);
+            }
+
+            return i < queueTurnThreshold
+                ? new Vector3(queueFrontStartX + i * queueFrontSpacing, queueFrontY, 0)
+                : new Vector3(queueTurnX, queueFrontY + (i - (queueTurnThreshold - 1)) * queueTurnSpacingY, 0);
+        }
+
+        private Vector3 BayPosition(int slot, int count)
+        {
+            if (alignToBackground && backgroundFitter != null)
+            {
+                Vector3 curbCenter = backgroundFitter.NormalizedToWorld(0.5f, bayCurbNormalizedY);
+                float usableWidth = backgroundFitter.WorldSize.x * bayCurbUsableWidthRatio;
+                float effectiveSpacing = count > 1 ? Mathf.Min(baySpacing, usableWidth / count) : 0f;
+                return new Vector3(curbCenter.x + (slot - (count - 1) * .5f) * effectiveSpacing, curbCenter.y, 0f);
+            }
+            return new Vector3((slot - (count - 1) * .5f) * baySpacing, bayPosY, 0f);
+        }
 
         private void Shake(float strength)
         {

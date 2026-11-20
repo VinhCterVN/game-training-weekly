@@ -53,6 +53,27 @@ namespace BusJam
                 : new Vector3(scaleX, scaleY, 1f);
         }
 
+        public Vector2 WorldSize
+        {
+            get
+            {
+                if (_renderer == null) _renderer = GetComponent<SpriteRenderer>();
+                return _renderer != null ? (Vector2)_renderer.bounds.size : Vector2.zero;
+            }
+        }
+
+        public Vector3 NormalizedToWorld(float u, float v)
+        {
+            if (_renderer == null) _renderer = GetComponent<SpriteRenderer>();
+            if (_renderer == null || _renderer.sprite == null) return Vector3.zero;
+            Bounds bounds = _renderer.bounds;
+            return new Vector3(
+                Mathf.Lerp(bounds.min.x, bounds.max.x, u),
+                Mathf.Lerp(bounds.min.y, bounds.max.y, v),
+                0f
+            );
+        }
+
         private Camera ResolveCamera() => targetCamera != null ? targetCamera : Camera.main;
     }
 }
