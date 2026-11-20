@@ -28,6 +28,7 @@ namespace BusJam
                 Fit();
         }
 
+        [ContextMenu("Fit Now")]
         public void Fit()
         {
             if (_renderer == null) _renderer = GetComponent<SpriteRenderer>();
